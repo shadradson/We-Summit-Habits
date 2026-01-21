@@ -1,0 +1,6 @@
+-keep,allowobfuscation,allowshrinking class com.humangamestats.ui.screens.categories.CategoriesViewModel
+-keep,allowobfuscation,allowshrinking class com.humangamestats.ui.screens.categories.CategoriesViewModel
+-keep,allowobfuscation,allowshrinking class com.humangamestats.ui.screens.category_detail.CategoryDetailViewModel
+-keep,allowobfuscation,allowshrinking class com.humangamestats.ui.screens.category_detail.CategoryDetailViewModel
+-keep,allowobfuscation,allowshrinking class com.humangamestats.ui.screens.record.RecordFormViewModel
+-keep,allowobfuscation,allowshrinking class com.humangamestats.ui.screens.record.RecordFormViewModel
