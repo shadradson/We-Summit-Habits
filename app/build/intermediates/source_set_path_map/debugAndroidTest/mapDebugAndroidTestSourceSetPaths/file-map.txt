@@ -1,4 +1,0 @@
-com.humangamestats.test.app-androidTest-0 C:\AndroidProjects\HumanGameStats\app\build\generated\res\resValues\androidTest\debug
-com.humangamestats.test.app-mergeDebugAndroidTestResources-1 C:\AndroidProjects\HumanGameStats\app\build\intermediates\incremental\debugAndroidTest\mergeDebugAndroidTestResources\merged.dir
-com.humangamestats.test.app-mergeDebugAndroidTestResources-2 C:\AndroidProjects\HumanGameStats\app\build\intermediates\incremental\debugAndroidTest\mergeDebugAndroidTestResources\stripped.dir
-com.humangamestats.test.app-debugAndroidTest-3 C:\AndroidProjects\HumanGameStats\app\build\intermediates\merged_res\debugAndroidTest\mergeDebugAndroidTestResources

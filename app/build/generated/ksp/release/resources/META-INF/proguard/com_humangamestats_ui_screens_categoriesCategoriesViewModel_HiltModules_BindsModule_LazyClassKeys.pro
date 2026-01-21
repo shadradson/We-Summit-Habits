@@ -1,1 +1,0 @@
--keep,allowobfuscation,allowshrinking class com.humangamestats.ui.screens.categories.CategoriesViewModel
