@@ -255,7 +255,7 @@ private fun StatCard(
                 tint = typeColor
             )
             
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(4.dp))
             
             // Stat info
             Column(modifier = Modifier.weight(1f)) {

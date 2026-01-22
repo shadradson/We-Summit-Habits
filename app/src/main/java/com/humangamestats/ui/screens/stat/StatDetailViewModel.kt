@@ -22,7 +22,20 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 import javax.inject.Inject
+
+/**
+ * Represents a group of records for a single day.
+ */
+data class DayGroup(
+    val date: Long, // Start of day timestamp
+    val displayDate: String, // Formatted display string (Today, Yesterday, or abbreviated date)
+    val records: List<StatRecord>
+)
 
 /**
  * UI state for the Stat Detail screen.
@@ -30,6 +43,7 @@ import javax.inject.Inject
 data class StatDetailUiState(
     val stat: Stat? = null,
     val records: List<StatRecord> = emptyList(),
+    val groupedRecords: List<DayGroup> = emptyList(),
     val chartData: List<StatRecord> = emptyList(),
     val statistics: StatStatistics? = null,
     val isLoading: Boolean = true,
@@ -96,6 +110,7 @@ class StatDetailViewModel @Inject constructor(
                 _uiState.update { state ->
                     state.copy(
                         records = records,
+                        groupedRecords = groupRecordsByDay(records),
                         isLoading = false,
                         error = null
                     )
@@ -210,5 +225,41 @@ class StatDetailViewModel @Inject constructor(
         _uiState.update { state ->
             state.copy(error = null)
         }
+    }
+    
+    /**
+     * Group records by day and format with relative dates.
+     * Returns records grouped by the day they were recorded.
+     */
+    private fun groupRecordsByDay(records: List<StatRecord>): List<DayGroup> {
+        val today = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }.timeInMillis
+        
+        val yesterday = today - 86400000L // 24 hours in millis
+        
+        return records
+            .groupBy { record ->
+                Calendar.getInstance().apply {
+                    timeInMillis = record.recordedAt
+                    set(Calendar.HOUR_OF_DAY, 0)
+                    set(Calendar.MINUTE, 0)
+                    set(Calendar.SECOND, 0)
+                    set(Calendar.MILLISECOND, 0)
+                }.timeInMillis
+            }
+            .map { (dayStart, dayRecords) ->
+                val displayDate = when {
+                    dayStart >= today -> "Today"
+                    dayStart >= yesterday -> "Yesterday"
+                    else -> SimpleDateFormat("MMM d, yyyy", Locale.getDefault())
+                        .format(Date(dayStart))
+                }
+                DayGroup(dayStart, displayDate, dayRecords)
+            }
+            .sortedByDescending { it.date }
     }
 }

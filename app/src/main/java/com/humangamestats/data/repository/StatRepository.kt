@@ -130,6 +130,7 @@ class StatRepository @Inject constructor(
     
     /**
      * Insert or update a stat.
+     * Uses upsert to avoid triggering cascade deletes on existing records.
      * @return The ID of the inserted/updated stat
      */
     suspend fun saveStat(stat: Stat): Long {
@@ -146,7 +147,8 @@ class StatRepository @Inject constructor(
                     updatedAt = System.currentTimeMillis()
                 )
             )
-            statDao.insertStat(entity)
+            // Use upsert to avoid cascade deletes when updating existing stats
+            statDao.upsertStat(entity)
         }
     }
     

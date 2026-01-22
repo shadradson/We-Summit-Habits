@@ -54,6 +54,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.humangamestats.R
+import com.humangamestats.model.DataPoint
 import com.humangamestats.model.SortOption
 import com.humangamestats.model.Stat
 import com.humangamestats.model.StatRecord
@@ -207,14 +208,26 @@ fun StatDetailScreen(
                             }
                         }
                         
-                        // Records list
-                        items(uiState.records, key = { it.id }) { record ->
-                            RecordCard(
-                                record = record,
-                                stat = uiState.stat,
-                                onEditClick = { onEditRecordClick(record.id) },
-                                onDeleteClick = { viewModel.showDeleteConfirmation(record) }
-                            )
+                        // Records list grouped by day
+                        uiState.groupedRecords.forEach { dayGroup ->
+                            item(key = "header_${dayGroup.date}") {
+                                DayHeader(
+                                    displayDate = dayGroup.displayDate,
+                                    recordCount = dayGroup.records.size
+                                )
+                            }
+                            
+                            items(
+                                items = dayGroup.records,
+                                key = { it.id }
+                            ) { record ->
+                                RecordCard(
+                                    record = record,
+                                    stat = uiState.stat,
+                                    onEditClick = { onEditRecordClick(record.id) },
+                                    onDeleteClick = { viewModel.showDeleteConfirmation(record) }
+                                )
+                            }
                         }
                     }
                 }
@@ -320,6 +333,35 @@ private fun StatisticItem(
     }
 }
 
+/**
+ * Day header showing the date and record count for a group of records.
+ */
+@Composable
+private fun DayHeader(
+    displayDate: String,
+    recordCount: Int,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = displayDate,
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.primary
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = "($recordCount)",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
 @Composable
 private fun RecordCard(
     record: StatRecord,
@@ -343,43 +385,29 @@ private fun RecordCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp)
+                .padding(12.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Value
+                // Values - show up to 3 data points
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = formatRecordValue(record.value, stat?.statType ?: StatType.NUMBER),
-                        style = MaterialTheme.typography.headlineMedium,
+                        text = formatRecordDataPoints(
+                            record = record,
+                            dataPoints = stat?.dataPoints ?: emptyList(),
+                            maxPoints = 3
+                        ),
+                        style = MaterialTheme.typography.titleMedium,
                         color = typeColor
-                    )
-                    Text(
-                        text = stat?.typeLabel ?: "",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                
-                // Date/Time
-                Column(horizontalAlignment = Alignment.End) {
-                    Text(
-                        text = record.getFormattedDate(),
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                    Text(
-                        text = record.getFormattedTime(),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
                 
                 Spacer(modifier = Modifier.width(8.dp))
                 
                 // Action buttons
-                Column {
+                Row {
                     IconButton(
                         onClick = onEditClick,
                         modifier = Modifier.size(32.dp)
@@ -492,9 +520,60 @@ private fun EmptyState(modifier: Modifier = Modifier) {
     }
 }
 
+/**
+ * Format up to [maxPoints] data points from a record for display.
+ * Returns values separated by " | " (e.g., "135 lbs | 10 reps | 3 sets").
+ */
+private fun formatRecordDataPoints(
+    record: StatRecord,
+    dataPoints: List<DataPoint>,
+    maxPoints: Int = 3
+): String {
+    // If there's only one data point or no data points defined, use legacy format
+    if (dataPoints.size <= 1) {
+        val dp = dataPoints.firstOrNull()
+        val value = record.getValueAt(0) ?: record.value
+        return formatSingleDataPoint(value, dp)
+    }
+    
+    // Show up to maxPoints data points
+    val pointsToShow = dataPoints.take(maxPoints)
+    return pointsToShow.mapIndexed { index, dp ->
+        val value = record.getValueAt(index) ?: ""
+        formatSingleDataPoint(value, dp)
+    }.filter { it.isNotEmpty() }.joinToString(" | ")
+}
+
+/**
+ * Format a single data point value for display.
+ */
+private fun formatSingleDataPoint(value: String, dataPoint: DataPoint?): String {
+    if (value.isEmpty()) return ""
+    
+    val type = dataPoint?.type ?: StatType.NUMBER
+    val unit = dataPoint?.unit ?: ""
+    
+    return when (type) {
+        StatType.NUMBER -> {
+            val num = value.toDoubleOrNull()
+            val formatted = if (num != null) {
+                if (num == num.toLong().toDouble()) num.toLong().toString()
+                else String.format("%.2f", num)
+            } else value
+            if (unit.isNotEmpty()) "$formatted $unit" else formatted
+        }
+        StatType.DURATION -> StatRecord.formatDuration(value.toLongOrNull() ?: 0L)
+        StatType.RATING -> {
+            val rating = value.toIntOrNull() ?: 0
+            "★".repeat(rating) + "☆".repeat(5 - rating)
+        }
+        StatType.CHECKBOX -> if (value == "true") "✓" else "✗"
+    }
+}
+
 private fun formatRecordValue(value: String, statType: StatType): String {
     return when (statType) {
-        StatType.NUMBER -> value.toDoubleOrNull()?.let { 
+        StatType.NUMBER -> value.toDoubleOrNull()?.let {
             if (it == it.toLong().toDouble()) it.toLong().toString() else String.format("%.2f", it)
         } ?: value
         StatType.DURATION -> StatRecord.formatDuration(value.toLongOrNull() ?: 0L)

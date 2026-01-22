@@ -6,6 +6,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
+import androidx.room.Upsert
 import com.humangamestats.data.database.entity.StatEntity
 import kotlinx.coroutines.flow.Flow
 
@@ -64,17 +65,31 @@ interface StatDao {
     suspend fun getMaxSortOrderInCategory(categoryId: Long): Int
     
     /**
-     * Insert a new stat.
+     * Insert a new stat (only if it doesn't exist).
      * @return The row ID of the newly inserted stat
      */
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertStat(stat: StatEntity): Long
     
     /**
-     * Insert multiple stats.
+     * Insert or update a stat without triggering cascade deletes.
+     * Uses UPDATE for existing stats, INSERT for new ones.
+     * @return The row ID of the inserted/updated stat
+     */
+    @Upsert
+    suspend fun upsertStat(stat: StatEntity): Long
+    
+    /**
+     * Insert multiple stats (for import, replaces existing).
      */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertStats(stats: List<StatEntity>): List<Long>
+    
+    /**
+     * Insert or update multiple stats without triggering cascade deletes.
+     */
+    @Upsert
+    suspend fun upsertStats(stats: List<StatEntity>): List<Long>
     
     /**
      * Update an existing stat.

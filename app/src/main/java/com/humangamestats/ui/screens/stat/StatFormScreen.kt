@@ -120,6 +120,43 @@ fun StatFormScreen(
         )
     }
     
+    // Delete data point confirmation dialog
+    val deleteIndex = uiState.dataPointToDeleteIndex
+    if (uiState.showDeleteConfirmation && deleteIndex != null) {
+        val dataPointToDelete = uiState.dataPoints.getOrNull(deleteIndex)
+        AlertDialog(
+            onDismissRequest = viewModel::hideDeleteDataPointConfirmation,
+            title = { Text("Delete Data Point") },
+            text = {
+                Column {
+                    Text(
+                        text = "Are you sure you want to delete \"${dataPointToDelete?.label ?: "this data point"}\"?"
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Warning: Existing records will no longer show data for this field.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = viewModel::confirmDeleteDataPoint
+                ) {
+                    Text("Delete", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = viewModel::hideDeleteDataPointConfirmation
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+    
     Scaffold(
         topBar = {
             TopAppBar(

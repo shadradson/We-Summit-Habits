@@ -36,7 +36,10 @@ data class StatFormUiState(
     val editingDataPointIndex: Int? = null,
     val dialogDataPointLabel: String = "",
     val dialogDataPointType: StatType = StatType.NUMBER,
-    val dialogDataPointUnit: String = ""
+    val dialogDataPointUnit: String = "",
+    // For delete confirmation
+    val showDeleteConfirmation: Boolean = false,
+    val dataPointToDeleteIndex: Int? = null
 )
 
 /**
@@ -251,9 +254,9 @@ class StatFormViewModel @Inject constructor(
     }
     
     /**
-     * Remove a data point by index.
+     * Show delete confirmation dialog for a data point.
      */
-    fun removeDataPoint(index: Int) {
+    fun showDeleteDataPointConfirmation(index: Int) {
         val currentState = _uiState.value
         if (currentState.dataPoints.size <= 1) {
             _uiState.update { it.copy(error = "Stat must have at least one data point") }
@@ -262,10 +265,55 @@ class StatFormViewModel @Inject constructor(
         
         _uiState.update { state ->
             state.copy(
-                dataPoints = state.dataPoints.filterIndexed { i, _ -> i != index },
-                selectedTemplateId = null // Clear template when manually editing
+                showDeleteConfirmation = true,
+                dataPointToDeleteIndex = index
             )
         }
+    }
+    
+    /**
+     * Hide delete confirmation dialog.
+     */
+    fun hideDeleteDataPointConfirmation() {
+        _uiState.update { state ->
+            state.copy(
+                showDeleteConfirmation = false,
+                dataPointToDeleteIndex = null
+            )
+        }
+    }
+    
+    /**
+     * Confirm and remove a data point by index.
+     */
+    fun confirmDeleteDataPoint() {
+        val currentState = _uiState.value
+        val index = currentState.dataPointToDeleteIndex ?: return
+        
+        if (currentState.dataPoints.size <= 1) {
+            _uiState.update { it.copy(
+                error = "Stat must have at least one data point",
+                showDeleteConfirmation = false,
+                dataPointToDeleteIndex = null
+            ) }
+            return
+        }
+        
+        _uiState.update { state ->
+            state.copy(
+                dataPoints = state.dataPoints.filterIndexed { i, _ -> i != index },
+                selectedTemplateId = null, // Clear template when manually editing
+                showDeleteConfirmation = false,
+                dataPointToDeleteIndex = null
+            )
+        }
+    }
+    
+    /**
+     * Remove a data point by index (direct, for internal use).
+     */
+    fun removeDataPoint(index: Int) {
+        showDeleteDataPointConfirmation(index)
     }
     
     /**
