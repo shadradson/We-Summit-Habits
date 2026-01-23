@@ -62,9 +62,6 @@ fun NavGraph(
                 },
                 onAddStatClick = {
                     navController.navigate(Screen.StatForm.createRoute(categoryId))
-                },
-                onEditStatClick = { statId ->
-                    navController.navigate(Screen.StatForm.createRoute(categoryId, statId))
                 }
             )
         }
@@ -87,6 +84,9 @@ fun NavGraph(
                 },
                 onEditRecordClick = { recordId ->
                     navController.navigate(Screen.RecordForm.createRoute(statId, recordId))
+                },
+                onEditStatClick = { categoryId ->
+                    navController.navigate(Screen.StatForm.createRoute(categoryId, statId))
                 }
             )
         }
@@ -110,7 +110,11 @@ fun NavGraph(
                 categoryId = categoryId,
                 statId = if (statId == -1L) null else statId,
                 onBackClick = { navController.popBackStack() },
-                onSaveComplete = { navController.popBackStack() }
+                onSaveComplete = { navController.popBackStack() },
+                onDeleteComplete = {
+                    // Navigate back to category detail, popping both form and stat detail
+                    navController.popBackStack(Screen.CategoryDetail.createRoute(categoryId), inclusive = false)
+                }
             )
         }
         

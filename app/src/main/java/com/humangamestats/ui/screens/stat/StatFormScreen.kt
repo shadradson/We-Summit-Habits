@@ -86,6 +86,7 @@ fun StatFormScreen(
     statId: Long?,
     onBackClick: () -> Unit,
     onSaveComplete: () -> Unit,
+    onDeleteComplete: () -> Unit = {},
     viewModel: StatFormViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -95,6 +96,13 @@ fun StatFormScreen(
     LaunchedEffect(uiState.saveComplete) {
         if (uiState.saveComplete) {
             onSaveComplete()
+        }
+    }
+    
+    // Handle delete completion
+    LaunchedEffect(uiState.deleteComplete) {
+        if (uiState.deleteComplete) {
+            onDeleteComplete()
         }
     }
     
@@ -151,6 +159,41 @@ fun StatFormScreen(
             dismissButton = {
                 TextButton(
                     onClick = viewModel::hideDeleteDataPointConfirmation
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+    
+    // Stat delete confirmation dialog
+    if (uiState.showStatDeleteConfirmation) {
+        AlertDialog(
+            onDismissRequest = viewModel::hideStatDeleteConfirmation,
+            title = { Text("Delete Stat") },
+            text = {
+                Column {
+                    Text(
+                        text = "Are you sure you want to delete \"${uiState.name}\"?"
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Warning: All records for this stat will also be permanently deleted.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = viewModel::deleteStat
+                ) {
+                    Text("Delete", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = viewModel::hideStatDeleteConfirmation
                 ) {
                     Text("Cancel")
                 }
@@ -286,7 +329,7 @@ fun StatFormScreen(
                     // Save Button
                     Button(
                         onClick = { viewModel.save() },
-                        enabled = !uiState.isSaving,
+                        enabled = !uiState.isSaving && !uiState.isDeleting,
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         if (uiState.isSaving) {
@@ -298,6 +341,37 @@ fun StatFormScreen(
                             Spacer(modifier = Modifier.width(8.dp))
                         }
                         Text(stringResource(R.string.save))
+                    }
+                    
+                    // Delete Button (only shown when editing)
+                    if (uiState.isEditing) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        
+                        TextButton(
+                            onClick = viewModel::showStatDeleteConfirmation,
+                            enabled = !uiState.isSaving && !uiState.isDeleting,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            if (uiState.isDeleting) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(20.dp),
+                                    strokeWidth = 2.dp,
+                                    color = MaterialTheme.colorScheme.error
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                            }
+                            Icon(
+                                imageVector = Icons.Default.Delete,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.error,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "Delete Stat",
+                                color = MaterialTheme.colorScheme.error
+                            )
+                        }
                     }
                 }
             }

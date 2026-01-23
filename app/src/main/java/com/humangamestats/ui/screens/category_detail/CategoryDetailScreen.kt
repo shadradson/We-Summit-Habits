@@ -15,17 +15,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.ShowChart
 import androidx.compose.material.icons.filled.Sort
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.unit.dp
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
@@ -39,7 +36,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -57,9 +53,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.humangamestats.R
 import com.humangamestats.model.SortOption
-import com.humangamestats.model.Stat
 import com.humangamestats.model.StatType
 import com.humangamestats.model.StatWithSummary
+import com.humangamestats.ui.screens.categories.CategoryDialog
 import com.humangamestats.ui.theme.StatTypeCheckbox
 import com.humangamestats.ui.theme.StatTypeDuration
 import com.humangamestats.ui.theme.StatTypeNumber
@@ -75,12 +71,12 @@ fun CategoryDetailScreen(
     onBackClick: () -> Unit,
     onStatClick: (Long) -> Unit,
     onAddStatClick: () -> Unit,
-    onEditStatClick: (Long) -> Unit,
     viewModel: CategoryDetailViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     var showSortMenu by remember { mutableStateOf(false) }
+    var showCategoryEditDialog by remember { mutableStateOf(false) }
     
     // Show error in snackbar
     LaunchedEffect(uiState.error) {
@@ -109,6 +105,12 @@ fun CategoryDetailScreen(
                     }
                 },
                 actions = {
+                    IconButton(onClick = { showCategoryEditDialog = true }) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = stringResource(R.string.edit_category)
+                        )
+                    }
                     Box {
                         IconButton(onClick = { showSortMenu = true }) {
                             Icon(
@@ -164,45 +166,35 @@ fun CategoryDetailScreen(
                 else -> {
                     StatsList(
                         stats = uiState.stats,
-                        onStatClick = onStatClick,
-                        onEditClick = onEditStatClick,
-                        onDeleteClick = { viewModel.showDeleteConfirmation(it) }
+                        onStatClick = onStatClick
                     )
                 }
             }
         }
     }
     
-    // Delete confirmation dialog
-    uiState.statToDelete?.let { stat ->
-        AlertDialog(
-            onDismissRequest = { viewModel.hideDeleteConfirmation() },
-            title = { Text(stringResource(R.string.delete_stat)) },
-            text = { Text(stringResource(R.string.delete_stat_confirm)) },
-            confirmButton = {
-                TextButton(
-                    onClick = { viewModel.deleteStat(stat) }
-                ) {
-                    Text(stringResource(R.string.delete))
-                }
+    // Category edit dialog
+    if (showCategoryEditDialog && uiState.category != null) {
+        CategoryDialog(
+            category = uiState.category,
+            onDismiss = { showCategoryEditDialog = false },
+            onSave = { title, icon ->
+                viewModel.updateCategory(title, icon)
+                showCategoryEditDialog = false
             },
-            dismissButton = {
-                TextButton(
-                    onClick = { viewModel.hideDeleteConfirmation() }
-                ) {
-                    Text(stringResource(R.string.cancel))
-                }
+            onDelete = {
+                showCategoryEditDialog = false
+                viewModel.deleteCategory(onBackClick)
             }
         )
     }
+    
 }
 
 @Composable
 private fun StatsList(
     stats: List<StatWithSummary>,
     onStatClick: (Long) -> Unit,
-    onEditClick: (Long) -> Unit,
-    onDeleteClick: (Stat) -> Unit,
     modifier: Modifier = Modifier
 ) {
     LazyColumn(
@@ -213,9 +205,7 @@ private fun StatsList(
         items(stats, key = { it.stat.id }) { statWithSummary ->
             StatCard(
                 statWithSummary = statWithSummary,
-                onClick = { onStatClick(statWithSummary.stat.id) },
-                onEditClick = { onEditClick(statWithSummary.stat.id) },
-                onDeleteClick = { onDeleteClick(statWithSummary.stat) }
+                onClick = { onStatClick(statWithSummary.stat.id) }
             )
         }
     }
@@ -225,8 +215,6 @@ private fun StatsList(
 private fun StatCard(
     statWithSummary: StatWithSummary,
     onClick: () -> Unit,
-    onEditClick: () -> Unit,
-    onDeleteClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val stat = statWithSummary.stat
@@ -247,7 +235,7 @@ private fun StatCard(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(4.dp),
+                .padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Stat type indicator
@@ -258,7 +246,7 @@ private fun StatCard(
                 tint = typeColor
             )
             
-            Spacer(modifier = Modifier.width(4.dp))
+            Spacer(modifier = Modifier.width(8.dp))
             
             // Stat info
             Column(modifier = Modifier.weight(1f)) {
@@ -294,33 +282,6 @@ private fun StatCard(
                         text = stat.typeLabel,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                Spacer(modifier = Modifier.width(8.dp))
-            }
-            
-            // Action buttons
-            Column {
-                IconButton(
-                    onClick = onEditClick,
-                    modifier = Modifier.size(32.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Edit,
-                        contentDescription = stringResource(R.string.edit),
-                        modifier = Modifier.size(18.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                IconButton(
-                    onClick = onDeleteClick,
-                    modifier = Modifier.size(32.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Delete,
-                        contentDescription = stringResource(R.string.delete),
-                        modifier = Modifier.size(18.dp),
-                        tint = MaterialTheme.colorScheme.error
                     )
                 }
             }

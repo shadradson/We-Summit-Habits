@@ -5,24 +5,19 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Category
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.filled.Settings
@@ -129,9 +124,7 @@ fun CategoriesScreen(
                 else -> {
                     CategoriesGrid(
                         categories = uiState.categories,
-                        onCategoryClick = onCategoryClick,
-                        onEditClick = { viewModel.showEditCategoryDialog(it) },
-                        onDeleteClick = { viewModel.showDeleteConfirmation(it) }
+                        onCategoryClick = onCategoryClick
                     )
                 }
             }
@@ -175,8 +168,6 @@ fun CategoriesScreen(
 private fun CategoriesGrid(
     categories: List<StatCategory>,
     onCategoryClick: (Long) -> Unit,
-    onEditClick: (StatCategory) -> Unit,
-    onDeleteClick: (StatCategory) -> Unit,
     modifier: Modifier = Modifier
 ) {
     LazyVerticalGrid(
@@ -189,9 +180,7 @@ private fun CategoriesGrid(
         items(categories, key = { it.id }) { category ->
             CategoryCard(
                 category = category,
-                onClick = { onCategoryClick(category.id) },
-                onEditClick = { onEditClick(category) },
-                onDeleteClick = { onDeleteClick(category) }
+                onClick = { onCategoryClick(category.id) }
             )
         }
     }
@@ -201,8 +190,6 @@ private fun CategoriesGrid(
 private fun CategoryCard(
     category: StatCategory,
     onClick: () -> Unit,
-    onEditClick: () -> Unit,
-    onDeleteClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -215,7 +202,7 @@ private fun CategoryCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(8.dp),
+                .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Icon(
@@ -234,38 +221,6 @@ private fun CategoryCard(
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
-            
-            Spacer(modifier = Modifier.height(8.dp))
-            
-            Row(
-                horizontalArrangement = Arrangement.Center
-            ) {
-                IconButton(
-                    onClick = onEditClick,
-                    modifier = Modifier.size(32.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Edit,
-                        contentDescription = stringResource(R.string.edit),
-                        modifier = Modifier.size(18.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                
-                Spacer(modifier = Modifier.width(8.dp))
-                
-                IconButton(
-                    onClick = onDeleteClick,
-                    modifier = Modifier.size(32.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Delete,
-                        contentDescription = stringResource(R.string.delete),
-                        modifier = Modifier.size(18.dp),
-                        tint = MaterialTheme.colorScheme.error
-                    )
-                }
-            }
         }
     }
 }

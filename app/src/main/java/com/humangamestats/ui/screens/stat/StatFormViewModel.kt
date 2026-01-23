@@ -29,17 +29,21 @@ data class StatFormUiState(
     val templates: List<DataPointTemplate> = emptyList(),
     val isLoading: Boolean = false,
     val isSaving: Boolean = false,
+    val isDeleting: Boolean = false,
     val error: String? = null,
     val saveComplete: Boolean = false,
+    val deleteComplete: Boolean = false,
     // For adding/editing a data point
     val showDataPointDialog: Boolean = false,
     val editingDataPointIndex: Int? = null,
     val dialogDataPointLabel: String = "",
     val dialogDataPointType: StatType = StatType.NUMBER,
     val dialogDataPointUnit: String = "",
-    // For delete confirmation
+    // For data point delete confirmation
     val showDeleteConfirmation: Boolean = false,
-    val dataPointToDeleteIndex: Int? = null
+    val dataPointToDeleteIndex: Int? = null,
+    // For stat delete confirmation
+    val showStatDeleteConfirmation: Boolean = false
 )
 
 /**
@@ -396,6 +400,48 @@ class StatFormViewModel @Inject constructor(
                     state.copy(
                         isSaving = false,
                         error = e.message ?: "Failed to save stat"
+                    )
+                }
+            }
+        }
+    }
+    
+    /**
+     * Show confirmation dialog for deleting the stat.
+     */
+    fun showStatDeleteConfirmation() {
+        if (!_uiState.value.isEditing) return
+        _uiState.update { state ->
+            state.copy(showStatDeleteConfirmation = true)
+        }
+    }
+    
+    /**
+     * Hide stat delete confirmation dialog.
+     */
+    fun hideStatDeleteConfirmation() {
+        _uiState.update { state ->
+            state.copy(showStatDeleteConfirmation = false)
+        }
+    }
+    
+    /**
+     * Delete the current stat.
+     */
+    fun deleteStat() {
+        val stat = existingStat ?: return
+        
+        viewModelScope.launch {
+            _uiState.update { it.copy(isDeleting = true, error = null) }
+            try {
+                statRepository.deleteStat(stat)
+                _uiState.update { it.copy(isDeleting = false, deleteComplete = true) }
+            } catch (e: Exception) {
+                _uiState.update { state ->
+                    state.copy(
+                        isDeleting = false,
+                        showStatDeleteConfirmation = false,
+                        error = e.message ?: "Failed to delete stat"
                     )
                 }
             }

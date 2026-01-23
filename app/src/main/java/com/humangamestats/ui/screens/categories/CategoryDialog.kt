@@ -56,11 +56,37 @@ import com.humangamestats.model.StatCategory
 fun CategoryDialog(
     category: StatCategory?,
     onDismiss: () -> Unit,
-    onSave: (title: String, icon: String) -> Unit
+    onSave: (title: String, icon: String) -> Unit,
+    onDelete: (() -> Unit)? = null
 ) {
     var title by remember { mutableStateOf(category?.title ?: "") }
     var selectedIcon by remember { mutableStateOf(category?.icon ?: "category") }
     var titleError by remember { mutableStateOf(false) }
+    var showDeleteConfirmation by remember { mutableStateOf(false) }
+    
+    // Delete confirmation dialog
+    if (showDeleteConfirmation) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirmation = false },
+            title = { Text(stringResource(R.string.delete_category)) },
+            text = { Text(stringResource(R.string.delete_category_confirm)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDeleteConfirmation = false
+                        onDelete?.invoke()
+                    }
+                ) {
+                    Text(stringResource(R.string.delete), color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteConfirmation = false }) {
+                    Text(stringResource(R.string.cancel))
+                }
+            }
+        )
+    }
     
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -110,6 +136,20 @@ fun CategoryDialog(
                             icon = icon,
                             isSelected = selectedIcon == iconName,
                             onClick = { selectedIcon = iconName }
+                        )
+                    }
+                }
+                
+                // Delete button (only shown when editing)
+                if (category != null && onDelete != null) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    TextButton(
+                        onClick = { showDeleteConfirmation = true },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = stringResource(R.string.delete_category),
+                            color = MaterialTheme.colorScheme.error
                         )
                     }
                 }

@@ -133,6 +133,44 @@ class CategoryDetailViewModel @Inject constructor(
     }
     
     /**
+     * Update the category title and icon.
+     */
+    fun updateCategory(title: String, icon: String) {
+        val currentCategory = _uiState.value.category ?: return
+        viewModelScope.launch {
+            try {
+                val updatedCategory = currentCategory.copy(
+                    title = title,
+                    icon = icon,
+                    updatedAt = System.currentTimeMillis()
+                )
+                categoryRepository.saveCategory(updatedCategory)
+            } catch (e: Exception) {
+                _uiState.update { state ->
+                    state.copy(error = e.message ?: "Failed to update category")
+                }
+            }
+        }
+    }
+    
+    /**
+     * Delete the current category.
+     */
+    fun deleteCategory(onDeleted: () -> Unit) {
+        val currentCategory = _uiState.value.category ?: return
+        viewModelScope.launch {
+            try {
+                categoryRepository.deleteCategory(currentCategory)
+                onDeleted()
+            } catch (e: Exception) {
+                _uiState.update { state ->
+                    state.copy(error = e.message ?: "Failed to delete category")
+                }
+            }
+        }
+    }
+    
+    /**
      * Show delete confirmation for a stat.
      */
     fun showDeleteConfirmation(stat: Stat) {

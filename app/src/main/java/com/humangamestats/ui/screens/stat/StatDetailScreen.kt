@@ -75,6 +75,7 @@ fun StatDetailScreen(
     onBackClick: () -> Unit,
     onAddRecordClick: () -> Unit,
     onEditRecordClick: (Long) -> Unit,
+    onEditStatClick: (categoryId: Long) -> Unit,
     viewModel: StatDetailViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -108,6 +109,14 @@ fun StatDetailScreen(
                     }
                 },
                 actions = {
+                    IconButton(
+                        onClick = { uiState.stat?.categoryId?.let { onEditStatClick(it) } }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = stringResource(R.string.edit_stat)
+                        )
+                    }
                     IconButton(onClick = { viewModel.toggleChart() }) {
                         Icon(
                             imageVector = Icons.Default.BarChart,
