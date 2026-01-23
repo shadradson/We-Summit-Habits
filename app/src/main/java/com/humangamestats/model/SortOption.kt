@@ -13,22 +13,22 @@ enum class SortOption(
     /**
      * Sort by most recent record entry (newest first).
      */
-    RECENT("Most Recent", ascending = false),
+    RECENT("Recently Recorded", ascending = false),
     
     /**
      * Sort by oldest record entry (oldest first).
      */
-    OLDEST("Oldest First", ascending = true),
+    OLDEST("Least Recently Recorded", ascending = true),
     
     /**
      * Sort by highest numeric value (highest first).
-     * Only applicable to NUMBER stat type.
+     * Only applicable to NUMBER stat type records.
      */
     HIGHEST("Highest Value", ascending = false),
     
     /**
      * Sort by lowest numeric value (lowest first).
-     * Only applicable to NUMBER stat type.
+     * Only applicable to NUMBER stat type records.
      */
     LOWEST("Lowest Value", ascending = true),
     
@@ -52,9 +52,17 @@ enum class SortOption(
         }
         
         /**
-         * Get sorting options applicable to a specific stat type.
+         * Get sorting options applicable for a stat list (within a category).
+         * Does not include value-based sorting since that's for records.
          */
-        fun forStatType(statType: StatType): List<SortOption> {
+        fun forStatList(): List<SortOption> {
+            return listOf(RECENT, OLDEST, ALPHABETICAL, ALPHABETICAL_DESC)
+        }
+        
+        /**
+         * Get sorting options applicable to records of a specific stat type.
+         */
+        fun forRecords(statType: StatType): List<SortOption> {
             return when (statType) {
                 StatType.NUMBER -> listOf(RECENT, OLDEST, HIGHEST, LOWEST)
                 StatType.DURATION -> listOf(RECENT, OLDEST, HIGHEST, LOWEST)
@@ -62,5 +70,12 @@ enum class SortOption(
                 StatType.CHECKBOX -> listOf(RECENT, OLDEST)
             }
         }
+        
+        /**
+         * Get sorting options applicable to a specific stat type.
+         * @deprecated Use forRecords() instead
+         */
+        @Deprecated("Use forRecords() instead", ReplaceWith("forRecords(statType)"))
+        fun forStatType(statType: StatType): List<SortOption> = forRecords(statType)
     }
 }

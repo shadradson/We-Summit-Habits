@@ -300,7 +300,7 @@ private fun SortDropdownMenu(
         expanded = expanded,
         onDismissRequest = onDismiss
     ) {
-        SortOption.entries.forEach { option ->
+        SortOption.forStatList().forEach { option ->
             DropdownMenuItem(
                 text = {
                     Text(

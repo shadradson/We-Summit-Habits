@@ -17,10 +17,21 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AttachMoney
+import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.material.icons.filled.Category
+import androidx.compose.material.icons.filled.DirectionsRun
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FitnessCenter
+import androidx.compose.material.icons.filled.Medication
+import androidx.compose.material.icons.filled.Mood
 import androidx.compose.material.icons.filled.Restaurant
+import androidx.compose.material.icons.filled.School
+import androidx.compose.material.icons.filled.SelfImprovement
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.WaterDrop
+import androidx.compose.material.icons.filled.Work
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -264,6 +275,17 @@ fun getCategoryIcon(iconName: String): ImageVector {
     return when (iconName) {
         "fitness_center" -> Icons.Default.FitnessCenter
         "restaurant" -> Icons.Default.Restaurant
+        "bedtime" -> Icons.Default.Bedtime
+        "mood" -> Icons.Default.Mood
+        "water_drop" -> Icons.Default.WaterDrop
+        "directions_run" -> Icons.Default.DirectionsRun
+        "self_improvement" -> Icons.Default.SelfImprovement
+        "medication" -> Icons.Default.Medication
+        "work" -> Icons.Default.Work
+        "school" -> Icons.Default.School
+        "attach_money" -> Icons.Default.AttachMoney
+        "favorite" -> Icons.Default.Favorite
+        "star" -> Icons.Default.Star
         else -> Icons.Default.Category
     }
 }

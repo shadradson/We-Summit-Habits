@@ -21,13 +21,10 @@ import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Sort
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -55,7 +52,6 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.humangamestats.R
 import com.humangamestats.model.DataPoint
-import com.humangamestats.model.SortOption
 import com.humangamestats.model.Stat
 import com.humangamestats.model.StatRecord
 import com.humangamestats.model.StatType
@@ -80,7 +76,6 @@ fun StatDetailScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
-    var showSortMenu by remember { mutableStateOf(false) }
     
     // Show error in snackbar
     LaunchedEffect(uiState.error) {
@@ -125,24 +120,6 @@ fun StatDetailScreen(
                                 MaterialTheme.colorScheme.primary
                             } else {
                                 MaterialTheme.colorScheme.onPrimaryContainer
-                            }
-                        )
-                    }
-                    Box {
-                        IconButton(onClick = { showSortMenu = true }) {
-                            Icon(
-                                imageVector = Icons.Default.Sort,
-                                contentDescription = stringResource(R.string.sort_by)
-                            )
-                        }
-                        SortDropdownMenu(
-                            expanded = showSortMenu,
-                            currentSort = uiState.sortOption,
-                            stat = uiState.stat,
-                            onDismiss = { showSortMenu = false },
-                            onSortSelected = { sortOption ->
-                                viewModel.setSortOption(sortOption)
-                                showSortMenu = false
                             }
                         )
                     }
@@ -470,39 +447,6 @@ private fun RecordCard(
                     )
                 }
             }
-        }
-    }
-}
-
-@Composable
-private fun SortDropdownMenu(
-    expanded: Boolean,
-    currentSort: SortOption,
-    stat: Stat?,
-    onDismiss: () -> Unit,
-    onSortSelected: (SortOption) -> Unit
-) {
-    val applicableOptions = stat?.let { SortOption.forStatType(it.statType) } 
-        ?: listOf(SortOption.RECENT, SortOption.OLDEST)
-    
-    DropdownMenu(
-        expanded = expanded,
-        onDismissRequest = onDismiss
-    ) {
-        applicableOptions.forEach { option ->
-            DropdownMenuItem(
-                text = {
-                    Text(
-                        text = option.displayName,
-                        color = if (option == currentSort) {
-                            MaterialTheme.colorScheme.primary
-                        } else {
-                            MaterialTheme.colorScheme.onSurface
-                        }
-                    )
-                },
-                onClick = { onSortSelected(option) }
-            )
         }
     }
 }
