@@ -79,8 +79,8 @@
                                             <option name="values">
                                               <map>
                                                 <entry key="color" value="000000" />
-                                                <entry key="imagePath" value="H:\My Drive\WSM Graphics\Logo\We Summit Ourselves\WSO_Logo_Only_Color.svg" />
-                                                <entry key="scalingPercent" value="56" />
+                                                <entry key="imagePath" value="H:\My Drive\WSM Graphics\Logo\We Summit Habits\WSO_Logo_Only_Color.svg" />
+                                                <entry key="scalingPercent" value="52" />
                                               </map>
                                             </option>
                                           </PersistentState>
@@ -113,7 +113,7 @@
                                   <option name="values">
                                     <map>
                                       <entry key="backgroundAssetType" value="COLOR" />
-                                      <entry key="backgroundColor" value="e3edef" />
+                                      <entry key="backgroundColor" value="f2f8f8" />
                                     </map>
                                   </option>
                                 </PersistentState>
@@ -290,6 +290,11 @@
                 </map>
               </option>
             </PersistentState>
+          </value>
+        </entry>
+        <entry key="vectorWizard">
+          <value>
+            <PersistentState />
           </value>
         </entry>
       </map>

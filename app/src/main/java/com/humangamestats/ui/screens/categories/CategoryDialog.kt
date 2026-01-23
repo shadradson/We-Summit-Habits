@@ -146,19 +146,19 @@ private fun IconOption(
     Box(
         modifier = modifier
             .size(48.dp)
-            .clip(RoundedCornerShape(8.dp))
+            .clip(RoundedCornerShape(4.dp))
             .then(
                 if (isSelected) {
                     Modifier.border(
                         width = 2.dp,
                         color = MaterialTheme.colorScheme.primary,
-                        shape = RoundedCornerShape(8.dp)
+                        shape = RoundedCornerShape(4.dp)
                     )
                 } else {
                     Modifier.border(
                         width = 1.dp,
                         color = MaterialTheme.colorScheme.outline,
-                        shape = RoundedCornerShape(8.dp)
+                        shape = RoundedCornerShape(4.dp)
                     )
                 }
             )

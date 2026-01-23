@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -200,7 +201,7 @@ fun StatFormScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .verticalScroll(rememberScrollState())
-                        .padding(16.dp)
+                        .padding(8.dp)
                 ) {
                     // Stat Name
                     OutlinedTextField(
@@ -212,16 +213,16 @@ fun StatFormScreen(
                         modifier = Modifier.fillMaxWidth()
                     )
                     
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
                     
                     // Template Selection
                     if (uiState.templates.isNotEmpty()) {
-                        Text(
+                        /*Text(
                             text = "Use Template (optional)",
                             style = MaterialTheme.typography.titleMedium
-                        )
+                        )*/
                         
-                        Spacer(modifier = Modifier.height(8.dp))
+                        //Spacer(modifier = Modifier.height(8.dp))
                         
                         TemplateSelector(
                             templates = uiState.templates,
@@ -235,7 +236,7 @@ fun StatFormScreen(
                             }
                         )
                         
-                        Spacer(modifier = Modifier.height(24.dp))
+                        Spacer(modifier = Modifier.height(16.dp))
                     }
                     
                     // Data Points Section
@@ -276,11 +277,11 @@ fun StatFormScreen(
                         )
                         
                         if (index < uiState.dataPoints.size - 1) {
-                            Spacer(modifier = Modifier.height(8.dp))
+                            Spacer(modifier = Modifier.height(4.dp))
                         }
                     }
                     
-                    Spacer(modifier = Modifier.height(32.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
                     
                     // Save Button
                     Button(
@@ -403,6 +404,7 @@ private fun DataPointCard(
     
     Card(
         modifier = modifier.fillMaxWidth(),
+        shape = RectangleShape,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
         )
@@ -604,19 +606,22 @@ private fun StatTypeChip(
     
     Row(
         modifier = modifier
-            .clip(RoundedCornerShape(8.dp))
+            //.clip(RoundedCornerShape(0.dp))
+            .clip(RectangleShape)
             .then(
                 if (isSelected) {
                     Modifier.border(
                         width = 2.dp,
                         color = typeColor,
-                        shape = RoundedCornerShape(8.dp)
+                        //shape = RoundedCornerShape(0.dp)
+                        shape = RectangleShape
                     )
                 } else {
                     Modifier.border(
                         width = 1.dp,
                         color = MaterialTheme.colorScheme.outline,
-                        shape = RoundedCornerShape(8.dp)
+                        //shape = RoundedCornerShape(0.dp)
+                        shape = RectangleShape
                     )
                 }
             )
