@@ -254,16 +254,18 @@ private fun StatCard(
                     text = stat.name,
                     style = MaterialTheme.typography.titleMedium
                 )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "${stat.statType.displayName} • ${stat.typeLabel}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                if (statWithSummary.recordCount > 0) {
+                // Show relative date of last entry
+                statWithSummary.latestRecordedAt?.let { timestamp ->
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "${statWithSummary.recordCount} entries",
+                        text = formatRelativeDate(timestamp),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                } ?: run {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = "No entries yet",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -354,7 +356,7 @@ private fun EmptyState(modifier: Modifier = Modifier) {
  */
 private fun formatStatValue(value: String, statType: StatType): String {
     return when (statType) {
-        StatType.NUMBER -> value.toDoubleOrNull()?.let { 
+        StatType.NUMBER -> value.toDoubleOrNull()?.let {
             if (it == it.toLong().toDouble()) it.toLong().toString() else String.format("%.1f", it)
         } ?: value
         StatType.DURATION -> {
@@ -363,5 +365,33 @@ private fun formatStatValue(value: String, statType: StatType): String {
         }
         StatType.RATING -> "★".repeat(value.toIntOrNull() ?: 0)
         StatType.CHECKBOX -> if (value == "true") "✓" else "✗"
+    }
+}
+
+/**
+ * Format a timestamp as a relative date string.
+ */
+private fun formatRelativeDate(timestamp: Long): String {
+    val now = System.currentTimeMillis()
+    val diff = now - timestamp
+    
+    val seconds = diff / 1000
+    val minutes = seconds / 60
+    val hours = minutes / 60
+    val days = hours / 24
+    val weeks = days / 7
+    val months = days / 30
+    val years = days / 365
+    
+    return when {
+        days == 0L -> "Today"
+        days == 1L -> "Yesterday"
+        days < 7L -> "$days days ago"
+        weeks == 1L -> "1 week ago"
+        weeks < 4L -> "$weeks weeks ago"
+        months == 1L -> "1 month ago"
+        months < 12L -> "$months months ago"
+        years == 1L -> "1 year ago"
+        else -> "$years years ago"
     }
 }
