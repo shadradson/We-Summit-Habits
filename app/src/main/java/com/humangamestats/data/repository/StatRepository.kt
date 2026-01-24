@@ -53,9 +53,14 @@ class StatRepository @Inject constructor(
     
     /**
      * Get stats with summary data (record count, latest values).
+     * This flow reacts to both stat changes and record changes.
      */
     fun getStatsWithSummaryByCategory(categoryId: Long): Flow<List<StatWithSummary>> {
-        return statDao.getStatsByCategory(categoryId).map { statEntities ->
+        // Combine stats flow with all records flow to react to record changes
+        return combine(
+            statDao.getStatsByCategory(categoryId),
+            statRecordDao.getAllRecordsFlow()
+        ) { statEntities, _ ->
             statEntities.map { statEntity ->
                 val stat = statEntity.toStat()
                 val recordCount = statRecordDao.getRecordCountByStat(stat.id)
