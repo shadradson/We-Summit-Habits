@@ -32,7 +32,7 @@ fun NavGraph(
         startDestination = startDestination,
         modifier = modifier
     ) {
-        // Categories list (home screen)
+        // Categories list (home screen) with embedded Today tab
         composable(route = Screen.Categories.route) {
             CategoriesScreen(
                 onCategoryClick = { categoryId ->
@@ -40,6 +40,9 @@ fun NavGraph(
                 },
                 onSettingsClick = {
                     navController.navigate(Screen.Settings.route)
+                },
+                onStatClick = { statId ->
+                    navController.navigate(Screen.StatDetail.createRoute(statId))
                 }
             )
         }

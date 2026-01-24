@@ -166,5 +166,15 @@ interface StatRecordDao {
     @Query("SELECT * FROM stat_records WHERE stat_id = :statId ORDER BY recorded_at ASC LIMIT :limit")
     suspend fun getRecordsForChart(statId: Long, limit: Int = 30): List<StatRecordEntity>
 
+    /**
+     * Get all records from today (between startOfDay and endOfDay timestamps).
+     */
+    @Query("SELECT * FROM stat_records WHERE recorded_at >= :startOfDay AND recorded_at < :endOfDay ORDER BY recorded_at DESC")
+    fun getRecordsForToday(startOfDay: Long, endOfDay: Long): Flow<List<StatRecordEntity>>
 
+    /**
+     * Get distinct stat IDs that have records from today.
+     */
+    @Query("SELECT DISTINCT stat_id FROM stat_records WHERE recorded_at >= :startOfDay AND recorded_at < :endOfDay")
+    fun getStatIdsWithRecordsToday(startOfDay: Long, endOfDay: Long): Flow<List<Long>>
 }

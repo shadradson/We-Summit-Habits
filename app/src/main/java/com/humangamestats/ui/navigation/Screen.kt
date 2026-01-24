@@ -11,6 +11,11 @@ sealed class Screen(val route: String) {
     data object Categories : Screen("categories")
     
     /**
+     * Today screen showing stats with record entries from today.
+     */
+    data object Today : Screen("today")
+    
+    /**
      * Category detail screen showing all stats within a category.
      * @param categoryId ID of the category to display
      */

@@ -10,8 +10,11 @@ import com.humangamestats.model.StatWithSummary
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
+import java.util.Calendar
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -77,6 +80,64 @@ class StatRepository @Inject constructor(
                 )
             }
         }
+    }
+    
+    /**
+     * Get stats with summary data that have records from today.
+     * This flow reacts to record changes.
+     */
+    fun getStatsWithTodayRecords(): Flow<List<StatWithSummary>> {
+        val (startOfDay, endOfDay) = getTodayTimestamps()
+        
+        return statRecordDao.getStatIdsWithRecordsToday(startOfDay, endOfDay)
+            .flatMapLatest { statIds ->
+                if (statIds.isEmpty()) {
+                    flowOf(emptyList())
+                } else {
+                    // Combine with all records flow to react to new records
+                    combine(
+                        statDao.getAllStatsFlow(),
+                        statRecordDao.getAllRecordsFlow()
+                    ) { allStats, _ ->
+                        // Get current timestamps in case we crossed midnight
+                        val (currentStart, currentEnd) = getTodayTimestamps()
+                        
+                        allStats.filter { it.id in statIds }
+                            .map { statEntity ->
+                                val stat = statEntity.toStat()
+                                val recordCount = statRecordDao.getRecordCountByStat(stat.id)
+                                val latestRecord = statRecordDao.getLatestRecordByStat(stat.id)
+                                
+                                val latestValues = latestRecord?.toStatRecord()?.values?.map { it.value } ?: emptyList()
+                                
+                                StatWithSummary(
+                                    stat = stat,
+                                    recordCount = recordCount,
+                                    latestValues = latestValues,
+                                    latestRecordedAt = latestRecord?.recordedAt
+                                )
+                            }
+                            .sortedByDescending { it.latestRecordedAt ?: 0L }
+                    }
+                }
+            }
+    }
+    
+    /**
+     * Get the start and end timestamps for today.
+     */
+    private fun getTodayTimestamps(): Pair<Long, Long> {
+        val calendar = Calendar.getInstance()
+        calendar.set(Calendar.HOUR_OF_DAY, 0)
+        calendar.set(Calendar.MINUTE, 0)
+        calendar.set(Calendar.SECOND, 0)
+        calendar.set(Calendar.MILLISECOND, 0)
+        val startOfDay = calendar.timeInMillis
+        
+        calendar.add(Calendar.DAY_OF_YEAR, 1)
+        val endOfDay = calendar.timeInMillis
+        
+        return Pair(startOfDay, endOfDay)
     }
     
     /**
