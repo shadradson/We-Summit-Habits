@@ -75,7 +75,14 @@ class StatCategoryRepository @Inject constructor(
                     updatedAt = System.currentTimeMillis()
                 )
             )
-            statCategoryDao.insertCategory(entity)
+            
+            // Use update for existing categories to avoid cascade delete from REPLACE strategy
+            if (category.id > 0) {
+                statCategoryDao.updateCategory(entity)
+                category.id
+            } else {
+                statCategoryDao.insertCategory(entity)
+            }
         }
     }
     
