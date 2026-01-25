@@ -39,7 +39,8 @@ data class RecordFormUiState(
     val error: String? = null,
     val saveComplete: Boolean = false,
     val showDatePicker: Boolean = false,
-    val showTimePicker: Boolean = false
+    val showTimePicker: Boolean = false,
+    val showDateTimeDialog: Boolean = false
 )
 
 /**
@@ -292,6 +293,24 @@ class RecordFormViewModel @Inject constructor(
     fun hideTimePicker() {
         _uiState.update { state ->
             state.copy(showTimePicker = false)
+        }
+    }
+    
+    /**
+     * Show combined date/time selection dialog.
+     */
+    fun showDateTimeDialog() {
+        _uiState.update { state ->
+            state.copy(showDateTimeDialog = true)
+        }
+    }
+    
+    /**
+     * Hide combined date/time selection dialog.
+     */
+    fun hideDateTimeDialog() {
+        _uiState.update { state ->
+            state.copy(showDateTimeDialog = false)
         }
     }
     
