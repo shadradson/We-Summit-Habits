@@ -177,4 +177,10 @@ interface StatRecordDao {
      */
     @Query("SELECT DISTINCT stat_id FROM stat_records WHERE recorded_at >= :startOfDay AND recorded_at < :endOfDay")
     fun getStatIdsWithRecordsToday(startOfDay: Long, endOfDay: Long): Flow<List<Long>>
+    
+    /**
+     * Get all records for a stat synchronously (for migration).
+     */
+    @Query("SELECT * FROM stat_records WHERE stat_id = :statId ORDER BY recorded_at DESC")
+    suspend fun getRecordsByStatSync(statId: Long): List<StatRecordEntity>
 }

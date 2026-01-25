@@ -137,13 +137,13 @@ fun RecordFormScreen(
                             text = stat.name,
                             style = MaterialTheme.typography.titleLarge
                         )
-                        Text(
+                        /*Text(
                             text = "${stat.dataPoints.size} data point${if (stat.dataPoints.size != 1) "s" else ""}",
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                        )*/
                         
-                        Spacer(modifier = Modifier.height(24.dp))
+                        Spacer(modifier = Modifier.height(12.dp))
                         
                         // Value inputs for each data point
                         stat.dataPoints.forEachIndexed { index, dataPoint ->
@@ -154,12 +154,12 @@ fun RecordFormScreen(
                             )
                             
                             if (index < stat.dataPoints.size - 1) {
-                                Spacer(modifier = Modifier.height(16.dp))
+                                Spacer(modifier = Modifier.height(8.dp))
                             }
                         }
                     }
                     
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
                     
                     // Date and Time
                     Text(
@@ -200,7 +200,7 @@ fun RecordFormScreen(
                         }
                     }
                     
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
                     
                     // Notes
                     OutlinedTextField(
@@ -208,12 +208,12 @@ fun RecordFormScreen(
                         onValueChange = { viewModel.updateNotes(it) },
                         label = { Text(stringResource(R.string.record_notes)) },
                         placeholder = { Text("Add notes about this record...") },
-                        minLines = 3,
+                        minLines = 1,
                         maxLines = 5,
                         modifier = Modifier.fillMaxWidth()
                     )
                     
-                    Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
                     
                     // Location
                     Text(
@@ -282,7 +282,7 @@ fun RecordFormScreen(
                         }
                     }
                     
-                    Spacer(modifier = Modifier.height(32.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
                     
                     // Save Button
                     Button(
@@ -322,14 +322,15 @@ private fun DataPointInput(
             style = MaterialTheme.typography.titleMedium
         )
         
-        Spacer(modifier = Modifier.height(8.dp))
+        //Spacer(modifier = Modifier.height(2.dp))
         
         when (dataPoint.type) {
             StatType.NUMBER -> {
                 NumberInputWithArrows(
                     value = value,
                     onValueChange = onValueChange,
-                    label = stringResource(R.string.record_value),
+                    //label = stringResource(R.string.record_value),
+                    label = "",
                     minValue = dataPoint.minValue,
                     maxValue = dataPoint.maxValue,
                     step = dataPoint.step ?: 1.0
@@ -372,7 +373,7 @@ private fun DataPointInput(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = if (value == "true") "Yes / Completed" else "No / Not Completed",
+                        text = if (value == "true") "Checked!" else "Check this to enter.",
                         style = MaterialTheme.typography.bodyLarge
                     )
                 }

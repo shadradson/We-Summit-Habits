@@ -188,16 +188,16 @@ class SettingsViewModel @Inject constructor(
             try {
                 // Get categories synchronously for export
                 val allCategories = mutableListOf<StatCategory>()
-                categoryRepository.getAllCategories().collect { 
+                categoryRepository.getAllCategories().collect {
                     allCategories.clear()
-                    allCategories.addAll(it) 
+                    allCategories.addAll(it)
                 }
                 
                 val allStats = statRepository.getAllStats()
                 val allRecords = recordRepository.getAllRecords()
                 
                 val exportData = ExportData(
-                    version = 2, // Version 2 supports multiple data points
+                    version = 3, // Version 3 supports data point IDs for stable ordering
                     exportedAt = System.currentTimeMillis(),
                     categories = allCategories.map { category ->
                         ExportCategory(
@@ -211,6 +211,7 @@ class SettingsViewModel @Inject constructor(
                                     name = stat.name,
                                     dataPoints = stat.dataPoints.map { dp ->
                                         ExportDataPoint(
+                                            id = dp.id,
                                             label = dp.label,
                                             type = dp.type.name,
                                             unit = dp.unit,
@@ -224,7 +225,11 @@ class SettingsViewModel @Inject constructor(
                                         ExportRecord(
                                             id = record.id,
                                             values = record.values.map { v ->
-                                                ExportDataPointValue(v.dataPointIndex, v.value)
+                                                ExportDataPointValue(
+                                                    dataPointId = v.dataPointId,
+                                                    dataPointIndex = v.dataPointIndex,
+                                                    value = v.value
+                                                )
                                             },
                                             notes = record.notes,
                                             latitude = record.latitude,
@@ -280,8 +285,10 @@ class SettingsViewModel @Inject constructor(
                     val categoryId = categoryRepository.saveCategory(category)
                     
                     for (exportStat in exportCategory.stats) {
+                        // Create data points with IDs if available, otherwise generate new ones
                         val dataPoints = exportStat.dataPoints.map { dp ->
                             DataPoint(
+                                id = dp.id.takeIf { it.isNotEmpty() } ?: java.util.UUID.randomUUID().toString(),
                                 label = dp.label,
                                 type = StatType.fromString(dp.type),
                                 unit = dp.unit,
@@ -299,9 +306,39 @@ class SettingsViewModel @Inject constructor(
                         )
                         val statId = statRepository.saveStat(stat)
                         
+                        // Reload stat to get the saved data points with their IDs
+                        val savedStat = statRepository.getStatById(statId)
+                        
                         for (exportRecord in exportStat.records) {
-                            val values = exportRecord.values.map { v ->
-                                DataPointValue(v.dataPointIndex, v.value)
+                            // Create values using dataPointId if available, otherwise fall back to index
+                            val values = exportRecord.values.mapIndexed { index, v ->
+                                if (v.dataPointId.isNotEmpty()) {
+                                    // Map old dataPointId to new dataPointId based on position
+                                    // Find which export data point had this ID
+                                    val exportDpIndex = exportStat.dataPoints.indexOfFirst { it.id == v.dataPointId }
+                                    val newDataPointId = if (exportDpIndex >= 0 && savedStat != null) {
+                                        savedStat.dataPoints.getOrNull(exportDpIndex)?.id ?: v.dataPointId
+                                    } else {
+                                        v.dataPointId
+                                    }
+                                    DataPointValue.forDataPoint(newDataPointId, v.value)
+                                } else if (v.dataPointIndex >= 0) {
+                                    // Legacy: use index to find new data point ID
+                                    val newDataPointId = savedStat?.dataPoints?.getOrNull(v.dataPointIndex)?.id ?: ""
+                                    if (newDataPointId.isNotEmpty()) {
+                                        DataPointValue.forDataPoint(newDataPointId, v.value)
+                                    } else {
+                                        DataPointValue.fromIndex(v.dataPointIndex, v.value)
+                                    }
+                                } else {
+                                    // Fallback: use index from position
+                                    val newDataPointId = savedStat?.dataPoints?.getOrNull(index)?.id ?: ""
+                                    if (newDataPointId.isNotEmpty()) {
+                                        DataPointValue.forDataPoint(newDataPointId, v.value)
+                                    } else {
+                                        DataPointValue.fromIndex(index, v.value)
+                                    }
+                                }
                             }
                             
                             val record = StatRecord(
@@ -381,6 +418,7 @@ data class ExportStat(
 
 @Serializable
 data class ExportDataPoint(
+    val id: String = "",  // Unique stable ID for the data point
     val label: String,
     val type: String,
     val unit: String = "",
@@ -402,6 +440,7 @@ data class ExportRecord(
 
 @Serializable
 data class ExportDataPointValue(
-    val dataPointIndex: Int,
+    val dataPointId: String = "",  // New ID-based field
+    val dataPointIndex: Int = -1,  // Legacy index field for backward compatibility
     val value: String
 )

@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.humangamestats.data.repository.DataPointTemplateRepository
+import com.humangamestats.data.repository.StatRecordRepository
 import com.humangamestats.data.repository.StatRepository
 import com.humangamestats.model.DataPoint
 import com.humangamestats.model.DataPointTemplate
@@ -54,7 +55,8 @@ data class StatFormUiState(
 class StatFormViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val statRepository: StatRepository,
-    private val templateRepository: DataPointTemplateRepository
+    private val templateRepository: DataPointTemplateRepository,
+    private val recordRepository: StatRecordRepository
 ) : ViewModel() {
     
     private val categoryId: Long = savedStateHandle.get<Long>(Screen.StatForm.ARG_CATEGORY_ID) ?: 0L
@@ -64,6 +66,9 @@ class StatFormViewModel @Inject constructor(
     val uiState: StateFlow<StatFormUiState> = _uiState.asStateFlow()
     
     private var existingStat: Stat? = null
+    
+    // Track original data points when loading for migration of existing records
+    private var originalDataPoints: List<DataPoint> = emptyList()
     
     init {
         loadTemplates()
@@ -93,6 +98,8 @@ class StatFormViewModel @Inject constructor(
                 val stat = statRepository.getStatById(statId!!)
                 if (stat != null) {
                     existingStat = stat
+                    // Store original data points order for record migration
+                    originalDataPoints = stat.dataPoints.toList()
                     _uiState.update { state ->
                         state.copy(
                             isEditing = true,
@@ -232,19 +239,25 @@ class StatFormViewModel @Inject constructor(
             return
         }
         
-        val newDataPoint = DataPoint(
-            label = currentState.dialogDataPointLabel.trim(),
-            type = currentState.dialogDataPointType,
-            unit = currentState.dialogDataPointUnit.trim()
-        )
-        
         val newDataPoints = if (currentState.editingDataPointIndex != null) {
-            // Editing existing data point
+            // Editing existing data point - preserve the original ID
+            val existingDataPoint = currentState.dataPoints[currentState.editingDataPointIndex]
+            val updatedDataPoint = DataPoint(
+                id = existingDataPoint.id, // Preserve the existing ID
+                label = currentState.dialogDataPointLabel.trim(),
+                type = currentState.dialogDataPointType,
+                unit = currentState.dialogDataPointUnit.trim()
+            )
             currentState.dataPoints.toMutableList().apply {
-                this[currentState.editingDataPointIndex] = newDataPoint
+                this[currentState.editingDataPointIndex] = updatedDataPoint
             }
         } else {
-            // Adding new data point
+            // Adding new data point - new ID will be auto-generated
+            val newDataPoint = DataPoint(
+                label = currentState.dialogDataPointLabel.trim(),
+                type = currentState.dialogDataPointType,
+                unit = currentState.dialogDataPointUnit.trim()
+            )
             currentState.dataPoints + newDataPoint
         }
         
@@ -377,7 +390,8 @@ class StatFormViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isSaving = true, error = null) }
             try {
-                val stat = if (existingStat != null) {
+                val isEditingExisting = existingStat != null
+                val stat = if (isEditingExisting) {
                     existingStat!!.copy(
                         name = currentState.name.trim(),
                         dataPoints = currentState.dataPoints,
@@ -394,6 +408,13 @@ class StatFormViewModel @Inject constructor(
                 }
                 
                 statRepository.saveStat(stat)
+                
+                // For existing stats, migrate any legacy records to use data point IDs
+                // This uses the original data point order to correctly map indexes to IDs
+                if (isEditingExisting && originalDataPoints.isNotEmpty()) {
+                    recordRepository.migrateRecordsToIdBased(stat.id, originalDataPoints)
+                }
+                
                 _uiState.update { it.copy(isSaving = false, saveComplete = true) }
             } catch (e: Exception) {
                 _uiState.update { state ->

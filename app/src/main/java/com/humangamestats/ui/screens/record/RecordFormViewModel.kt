@@ -85,15 +85,17 @@ class RecordFormViewModel @Inject constructor(
                     val lastRecord = recordRepository.getLatestRecordByStat(statId)
 
                     val defaultValues = if (lastRecord != null) {
-                        // Use values from the last record
+                        // Use values from the last record, using ID-based lookup with index fallback
                         stat.dataPoints.mapIndexed { index, dp ->
-                            lastRecord.getValueAt(index) ?: getDefaultValueForType(dp.type)
-                        }  // Returns List<String>, no .toMap()
+                            lastRecord.getValueForDataPoint(dp.id)
+                                ?: lastRecord.values.find { it.dataPointIndex == index }?.value
+                                ?: getDefaultValueForType(dp.type)
+                        }
                     } else {
                         // Fresh defaults
                         stat.dataPoints.map { dp ->
                             getDefaultValueForType(dp.type)
-                        }  // Returns List<String>
+                        }
                     }
 
                     _uiState.update { state ->
@@ -128,10 +130,13 @@ class RecordFormViewModel @Inject constructor(
                     existingRecord = record
                     
                     // Extract values from record, ensuring we have values for all data points
+                    // Using ID-based lookup with index fallback for legacy data
                     val stat = _uiState.value.stat
                     val valuesList = if (stat != null) {
                         stat.dataPoints.mapIndexed { index, dp ->
-                            record.getValueAt(index) ?: getDefaultValueForType(dp.type)
+                            record.getValueForDataPoint(dp.id)
+                                ?: record.values.find { it.dataPointIndex == index }?.value
+                                ?: getDefaultValueForType(dp.type)
                         }
                     } else {
                         record.values.map { it.value }
@@ -315,9 +320,10 @@ class RecordFormViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isSaving = true, error = null) }
             try {
-                // Create values list
-                val dataPointValues = currentState.values.mapIndexed { index, value ->
-                    DataPointValue(index, value.trim())
+                // Create values list using data point IDs (not indices)
+                // This ensures values remain linked to their data points even after reordering
+                val dataPointValues = stat.dataPoints.mapIndexed { index, dp ->
+                    DataPointValue.forDataPoint(dp.id, currentState.values.getOrElse(index) { "" }.trim())
                 }
                 
                 val record = if (existingRecord != null) {

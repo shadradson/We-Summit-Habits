@@ -3,6 +3,8 @@ package com.humangamestats.data.repository
 import com.humangamestats.data.database.dao.StatRecordDao
 import com.humangamestats.data.database.entity.StatRecordEntity
 import com.humangamestats.di.IoDispatcher
+import com.humangamestats.model.DataPoint
+import com.humangamestats.model.DataPointValue
 import com.humangamestats.model.SortOption
 import com.humangamestats.model.StatRecord
 import kotlinx.coroutines.CoroutineDispatcher
@@ -217,6 +219,62 @@ class StatRecordRepository @Inject constructor(
         return withContext(ioDispatcher) {
             val entities = records.map { record -> StatRecordEntity.fromStatRecord(record) }
             statRecordDao.insertRecords(entities)
+        }
+    }
+    
+    /**
+     * Migrate records from index-based to ID-based data point values.
+     * This assigns dataPointIds to records that only have dataPointIndex.
+     * Also handles legacy records that have no explicit indices (using position in list).
+     *
+     * @param statId The stat ID
+     * @param originalDataPoints The original data points (in their original order) with IDs
+     */
+    suspend fun migrateRecordsToIdBased(statId: Long, originalDataPoints: List<DataPoint>) {
+        withContext(ioDispatcher) {
+            // Get all records for this stat
+            val records = statRecordDao.getRecordsByStatSync(statId)
+            
+            for (entity in records) {
+                val record = entity.toStatRecord()
+                
+                // Check if any values need migration (have no ID)
+                // This includes:
+                // 1. Values with explicit dataPointIndex >= 0
+                // 2. Legacy values with no index (dataPointIndex == -1) but stored in positional order
+                val needsMigration = record.values.any { it.dataPointId.isEmpty() }
+                
+                if (needsMigration) {
+                    // Migrate values: map to the corresponding dataPointId
+                    val migratedValues = record.values.mapIndexed { valueIndex, value ->
+                        if (value.dataPointId.isEmpty()) {
+                            // Use explicit index if available (>= 0), otherwise use position in list
+                            val effectiveIndex = if (value.dataPointIndex >= 0) value.dataPointIndex else valueIndex
+                            // Look up the data point ID from the original order
+                            val dataPointId = originalDataPoints.getOrNull(effectiveIndex)?.id ?: ""
+                            DataPointValue.forDataPoint(dataPointId, value.value)
+                        } else {
+                            value
+                        }
+                    }
+                    
+                    // Save the migrated record
+                    val migratedRecord = record.copy(
+                        values = migratedValues,
+                        updatedAt = System.currentTimeMillis()
+                    )
+                    statRecordDao.insertRecord(StatRecordEntity.fromStatRecord(migratedRecord))
+                }
+            }
+        }
+    }
+    
+    /**
+     * Get all records for a stat synchronously (for migration).
+     */
+    suspend fun getRecordsByStatSync(statId: Long): List<StatRecord> {
+        return withContext(ioDispatcher) {
+            statRecordDao.getRecordsByStatSync(statId).map { it.toStatRecord() }
         }
     }
 }

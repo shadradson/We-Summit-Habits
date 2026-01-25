@@ -99,20 +99,21 @@ data class StatRecordEntity(
     /**
      * Convert this entity to a domain model StatRecord.
      */
+    @Suppress("DEPRECATION")
     fun toStatRecord(): StatRecord {
         val values = try {
             if (valuesJson.isNotEmpty() && valuesJson != "[]") {
                 json.decodeFromString<List<DataPointValue>>(valuesJson)
             } else if (value.isNotEmpty()) {
-                // Fall back to legacy single value
-                listOf(DataPointValue(0, value))
+                // Fall back to legacy single value (index-based for old data)
+                listOf(DataPointValue.fromIndex(0, value))
             } else {
                 emptyList()
             }
         } catch (e: Exception) {
             // Fall back to legacy single value if JSON parsing fails
             if (value.isNotEmpty()) {
-                listOf(DataPointValue(0, value))
+                listOf(DataPointValue.fromIndex(0, value))
             } else {
                 emptyList()
             }

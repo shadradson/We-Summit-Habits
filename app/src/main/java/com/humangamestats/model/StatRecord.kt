@@ -48,25 +48,66 @@ data class StatRecord(
         get() = latitude != null && longitude != null
     
     /**
-     * Get value for a specific data point index.
+     * Check if this record uses the new ID-based data point system.
      */
-    fun getValueAt(index: Int): String? {
+    val usesDataPointIds: Boolean
+        get() = values.any { it.hasDataPointId() }
+    
+    /**
+     * Get value for a specific data point by ID.
+     */
+    fun getValueForDataPoint(dataPointId: String): String? {
+        return values.find { it.dataPointId == dataPointId }?.value
+    }
+    
+    /**
+     * Get numeric value for a specific data point by ID.
+     */
+    fun getNumericValueForDataPoint(dataPointId: String): Double? {
+        return getValueForDataPoint(dataPointId)?.toDoubleOrNull()
+    }
+    
+    /**
+     * Get value for a specific data point by index (legacy fallback).
+     * Tries ID first, then falls back to index for backward compatibility.
+     */
+    fun getValueAt(index: Int, dataPoints: List<DataPoint>? = null): String? {
+        // If we have dataPoints and this record uses IDs, look up by ID
+        if (dataPoints != null && usesDataPointIds) {
+            val dataPoint = dataPoints.getOrNull(index)
+            if (dataPoint != null) {
+                return getValueForDataPoint(dataPoint.id)
+            }
+        }
+        // Fallback to index-based lookup for legacy data
         return values.find { it.dataPointIndex == index }?.value
     }
     
     /**
      * Get numeric value for a specific data point index.
      */
-    fun getNumericValueAt(index: Int): Double? {
-        return getValueAt(index)?.toDoubleOrNull()
+    fun getNumericValueAt(index: Int, dataPoints: List<DataPoint>? = null): Double? {
+        return getValueAt(index, dataPoints)?.toDoubleOrNull()
     }
     
     /**
-     * Get all values as a list of strings in order.
+     * Get all values as a list of strings in the order of the provided data points.
      */
+    fun getOrderedValues(dataPoints: List<DataPoint>): List<String> {
+        return dataPoints.map { dp ->
+            getValueForDataPoint(dp.id)
+                ?: values.find { it.dataPointIndex == dataPoints.indexOf(dp) }?.value
+                ?: ""
+        }
+    }
+    
+    /**
+     * Get all values as a list of strings in order (legacy).
+     */
+    @Deprecated("Use getOrderedValues(dataPoints) instead for proper ID-based lookup")
     fun getOrderedValues(): List<String> {
         return (0 until values.size).map { index ->
-            getValueAt(index) ?: ""
+            values.find { it.dataPointIndex == index }?.value ?: ""
         }
     }
     
@@ -96,10 +137,14 @@ data class StatRecord(
     
     /**
      * Format values for display with data point info.
+     * Uses ID-based lookup with fallback to index for legacy data.
      */
     fun formatValuesForDisplay(dataPoints: List<DataPoint>): String {
         return dataPoints.mapIndexed { index, dp ->
-            val value = getValueAt(index) ?: ""
+            // Try ID-based lookup first, then fallback to index
+            val value = getValueForDataPoint(dp.id)
+                ?: values.find { it.dataPointIndex == index }?.value
+                ?: ""
             when (dp.type) {
                 StatType.NUMBER -> {
                     val num = value.toDoubleOrNull()
@@ -129,23 +174,37 @@ data class StatRecord(
     
     companion object {
         /**
-         * Create a record with a single value (backward compatible).
+         * Create a record with values for the given data points (new ID-based).
          */
-        fun single(statId: Long, value: String): StatRecord {
+        fun create(statId: Long, dataPoints: List<DataPoint>, valueStrings: List<String>): StatRecord {
             return StatRecord(
                 statId = statId,
-                values = listOf(DataPointValue(0, value))
+                values = dataPoints.mapIndexed { index, dp ->
+                    DataPointValue.forDataPoint(dp.id, valueStrings.getOrElse(index) { "" })
+                }
             )
         }
         
         /**
-         * Create a record from a list of string values.
+         * Create a record with a single value (backward compatible).
          */
+        @Deprecated("Use create() with data points for ID-based values")
+        fun single(statId: Long, value: String): StatRecord {
+            return StatRecord(
+                statId = statId,
+                values = listOf(DataPointValue.fromIndex(0, value))
+            )
+        }
+        
+        /**
+         * Create a record from a list of string values (backward compatible).
+         */
+        @Deprecated("Use create() with data points for ID-based values")
         fun fromValues(statId: Long, valueStrings: List<String>): StatRecord {
             return StatRecord(
                 statId = statId,
                 values = valueStrings.mapIndexed { index, value ->
-                    DataPointValue(index, value)
+                    DataPointValue.fromIndex(index, value)
                 }
             )
         }

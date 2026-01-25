@@ -476,6 +476,7 @@ private fun EmptyState(modifier: Modifier = Modifier) {
 /**
  * Format up to [maxPoints] data points from a record for display.
  * Returns values separated by " | " (e.g., "135 lbs | 10 reps | 3 sets").
+ * Uses ID-based lookup with fallback to index for legacy data.
  */
 private fun formatRecordDataPoints(
     record: StatRecord,
@@ -485,14 +486,24 @@ private fun formatRecordDataPoints(
     // If there's only one data point or no data points defined, use legacy format
     if (dataPoints.size <= 1) {
         val dp = dataPoints.firstOrNull()
-        val value = record.getValueAt(0) ?: record.value
+        // Use ID-based lookup with index fallback
+        val value = if (dp != null) {
+            record.getValueForDataPoint(dp.id)
+                ?: record.values.find { it.dataPointIndex == 0 }?.value
+                ?: record.value
+        } else {
+            record.value
+        }
         return formatSingleDataPoint(value, dp)
     }
     
-    // Show up to maxPoints data points
+    // Show up to maxPoints data points using ID-based lookup
     val pointsToShow = dataPoints.take(maxPoints)
     return pointsToShow.mapIndexed { index, dp ->
-        val value = record.getValueAt(index) ?: ""
+        // Use ID-based lookup with index fallback for legacy data
+        val value = record.getValueForDataPoint(dp.id)
+            ?: record.values.find { it.dataPointIndex == index }?.value
+            ?: ""
         formatSingleDataPoint(value, dp)
     }.filter { it.isNotEmpty() }.joinToString(" | ")
 }
