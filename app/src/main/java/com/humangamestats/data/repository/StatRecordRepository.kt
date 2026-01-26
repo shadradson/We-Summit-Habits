@@ -1,5 +1,6 @@
 package com.humangamestats.data.repository
 
+import android.content.Context
 import com.humangamestats.data.database.dao.StatRecordDao
 import com.humangamestats.data.database.entity.StatRecordEntity
 import com.humangamestats.di.IoDispatcher
@@ -7,6 +8,8 @@ import com.humangamestats.model.DataPoint
 import com.humangamestats.model.DataPointValue
 import com.humangamestats.model.SortOption
 import com.humangamestats.model.StatRecord
+import com.humangamestats.widget.WidgetUpdater
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -17,11 +20,13 @@ import javax.inject.Singleton
 /**
  * Repository for managing stat records.
  * Provides a clean API for the UI layer to interact with record data.
+ * Automatically updates the Today widget when records are modified.
  */
 @Singleton
 class StatRecordRepository @Inject constructor(
     private val statRecordDao: StatRecordDao,
-    @IoDispatcher private val ioDispatcher: CoroutineDispatcher
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
+    @ApplicationContext private val context: Context
 ) {
     
     /**
@@ -130,33 +135,43 @@ class StatRecordRepository @Inject constructor(
     
     /**
      * Insert or update a record.
+     * Also triggers a widget update.
      * @return The ID of the inserted/updated record
      */
     suspend fun saveRecord(record: StatRecord): Long {
-        return withContext(ioDispatcher) {
+        val result = withContext(ioDispatcher) {
             val entity = StatRecordEntity.fromStatRecord(
                 record.copy(updatedAt = System.currentTimeMillis())
             )
             statRecordDao.insertRecord(entity)
         }
+        // Update widget after saving
+        WidgetUpdater.updateTodayWidget(context)
+        return result
     }
     
     /**
      * Delete a record.
+     * Also triggers a widget update.
      */
     suspend fun deleteRecord(record: StatRecord) {
         withContext(ioDispatcher) {
             statRecordDao.deleteRecord(StatRecordEntity.fromStatRecord(record))
         }
+        // Update widget after deleting
+        WidgetUpdater.updateTodayWidget(context)
     }
     
     /**
      * Delete a record by ID.
+     * Also triggers a widget update.
      */
     suspend fun deleteRecordById(recordId: Long) {
         withContext(ioDispatcher) {
             statRecordDao.deleteRecordById(recordId)
         }
+        // Update widget after deleting
+        WidgetUpdater.updateTodayWidget(context)
     }
     
     /**

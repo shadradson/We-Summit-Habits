@@ -95,4 +95,11 @@
     <string name="view_chart">View Chart</string>
     <string name="chart_title">Progress Over Time</string>
     <string name="no_chart_data">Not enough data for chart</string>
+
+    <!-- Widget -->
+    <string name="widget_title">Today</string>
+    <string name="widget_description">Shows stats with entries from today</string>
+    <string name="widget_loading">Loading…</string>
+    <string name="widget_empty">No entries today</string>
+    <string name="widget_refresh">Refresh</string>
 </resources>
