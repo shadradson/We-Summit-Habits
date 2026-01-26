@@ -21,13 +21,17 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        
+        // Check for deep link stat ID from widget
+        val initialStatId = intent?.getLongExtra("stat_id", -1L)?.takeIf { it != -1L }
+        
         setContent {
             HumanGameStatsTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    NavGraph()
+                    NavGraph(initialStatId = initialStatId)
                 }
             }
         }

@@ -76,6 +76,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.humangamestats.R
+import com.humangamestats.model.DataPoint
 import com.humangamestats.model.StatCategory
 import com.humangamestats.model.StatRecord
 import com.humangamestats.model.StatType
@@ -428,7 +429,9 @@ private fun TodayStatCard(
     modifier: Modifier = Modifier
 ) {
     val stat = statWithSummary.stat
-    val typeColor = when (stat.statType) {
+    // Use primary data point type for color
+    val primaryType = stat.primaryDataPoint?.type ?: StatType.NUMBER
+    val typeColor = when (primaryType) {
         StatType.NUMBER -> StatTypeNumber
         StatType.DURATION -> StatTypeDuration
         StatType.RATING -> StatTypeRating
@@ -475,16 +478,17 @@ private fun TodayStatCard(
                 }
             }
             
-            // Latest value
-            statWithSummary.latestValue?.let { value ->
+            // Latest values - show all data points separated by pipes
+            val displayValue = formatAllValues(statWithSummary.latestValues, stat.dataPoints)
+            if (displayValue.isNotEmpty()) {
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
-                        text = formatStatValue(value, stat.statType),
+                        text = displayValue,
                         style = MaterialTheme.typography.titleLarge,
                         color = typeColor
                     )
                     Text(
-                        text = stat.typeLabel,
+                        text = stat.dataPointsSummary,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -517,6 +521,28 @@ private fun formatStatValue(value: String, statType: StatType): String {
         StatType.RATING -> "★".repeat(value.toIntOrNull() ?: 0)
         StatType.CHECKBOX -> if (value == "true") "✓" else "✗"
     }
+}
+
+/**
+ * Format all values from a record, separated by pipes.
+ * Each value is formatted according to its data point type.
+ */
+private fun formatAllValues(values: List<String>, dataPoints: List<DataPoint>): String {
+    if (values.isEmpty()) return ""
+    
+    return values.mapIndexed { index, value ->
+        val dataPoint = dataPoints.getOrNull(index)
+        if (dataPoint != null) {
+            val formatted = formatStatValue(value, dataPoint.type)
+            if (dataPoint.unit.isNotEmpty() && formatted.isNotEmpty()) {
+                "$formatted ${dataPoint.unit}"
+            } else {
+                formatted
+            }
+        } else {
+            value
+        }
+    }.filter { it.isNotEmpty() }.joinToString(" | ")
 }
 
 /**

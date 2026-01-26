@@ -36,6 +36,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.humangamestats.model.DataPoint
 import com.humangamestats.model.StatRecord
 import com.humangamestats.model.StatType
 import com.humangamestats.model.StatWithSummary
@@ -120,7 +121,9 @@ private fun TodayStatCard(
     modifier: Modifier = Modifier
 ) {
     val stat = statWithSummary.stat
-    val typeColor = when (stat.statType) {
+    // Use primary data point type for color
+    val primaryType = stat.primaryDataPoint?.type ?: StatType.NUMBER
+    val typeColor = when (primaryType) {
         StatType.NUMBER -> StatTypeNumber
         StatType.DURATION -> StatTypeDuration
         StatType.RATING -> StatTypeRating
@@ -167,19 +170,20 @@ private fun TodayStatCard(
                 }
             }
             
-            // Latest value
-            statWithSummary.latestValue?.let { value ->
+            // Latest values - show all data points separated by pipes
+            val displayValue = formatAllValues(statWithSummary.latestValues, stat.dataPoints)
+            if (displayValue.isNotEmpty()) {
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
-                        text = formatStatValue(value, stat.statType),
-                        style = MaterialTheme.typography.titleLarge,
+                        text = displayValue,
+                        style = MaterialTheme.typography.titleMedium,
                         color = typeColor
                     )
-                    Text(
-                        text = stat.typeLabel,
+                    /*Text(
+                        text = stat.dataPointsSummary,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    )*/
                 }
             }
         }
@@ -230,7 +234,7 @@ private fun formatTime(timestamp: Long): String {
  */
 private fun formatStatValue(value: String, statType: StatType): String {
     return when (statType) {
-        StatType.NUMBER -> value.toDoubleOrNull()?.let { 
+        StatType.NUMBER -> value.toDoubleOrNull()?.let {
             if (it == it.toLong().toDouble()) it.toLong().toString() else String.format("%.1f", it)
         } ?: value
         StatType.DURATION -> {
@@ -240,4 +244,26 @@ private fun formatStatValue(value: String, statType: StatType): String {
         StatType.RATING -> "★".repeat(value.toIntOrNull() ?: 0)
         StatType.CHECKBOX -> if (value == "true") "✓" else "✗"
     }
+}
+
+/**
+ * Format all values from a record, separated by pipes.
+ * Each value is formatted according to its data point type.
+ */
+private fun formatAllValues(values: List<String>, dataPoints: List<DataPoint>): String {
+    if (values.isEmpty()) return ""
+    
+    return values.mapIndexed { index, value ->
+        val dataPoint = dataPoints.getOrNull(index)
+        if (dataPoint != null) {
+            val formatted = formatStatValue(value, dataPoint.type)
+            if (dataPoint.unit.isNotEmpty() && formatted.isNotEmpty()) {
+                "$formatted ${dataPoint.unit}"
+            } else {
+                formatted
+            }
+        } else {
+            value
+        }
+    }.filter { it.isNotEmpty() }.joinToString(" | ")
 }

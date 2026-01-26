@@ -1,6 +1,7 @@
 package com.humangamestats.ui.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -20,13 +21,22 @@ import com.humangamestats.ui.screens.templates.TemplatesScreen
 /**
  * Main navigation graph for the app.
  * Defines all navigation destinations and their arguments.
+ * @param initialStatId Optional stat ID to navigate to directly (from widget deep link)
  */
 @Composable
 fun NavGraph(
     modifier: Modifier = Modifier,
     navController: NavHostController = rememberNavController(),
-    startDestination: String = Screen.Categories.route
+    startDestination: String = Screen.Categories.route,
+    initialStatId: Long? = null
 ) {
+    // Handle deep link navigation from widget
+    LaunchedEffect(initialStatId) {
+        initialStatId?.let { statId ->
+            navController.navigate(Screen.StatDetail.createRoute(statId))
+        }
+    }
+    
     NavHost(
         navController = navController,
         startDestination = startDestination,

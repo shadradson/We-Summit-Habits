@@ -17,6 +17,7 @@ import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.action.ActionCallback
 import androidx.glance.appwidget.action.actionRunCallback
+import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.lazy.LazyColumn
 import androidx.glance.appwidget.lazy.items
 import androidx.glance.appwidget.provideContent
@@ -39,6 +40,7 @@ import androidx.room.Room
 import com.humangamestats.MainActivity
 import com.humangamestats.R
 import com.humangamestats.data.database.AppDatabase
+import com.humangamestats.model.DataPoint
 import com.humangamestats.model.StatRecord
 import com.humangamestats.model.StatType
 import com.humangamestats.model.StatWithSummary
@@ -181,6 +183,7 @@ private fun TodayWidgetContent(
             .fillMaxSize()
             .background(GlanceTheme.colors.surface)
             .padding(8.dp)
+            .cornerRadius(4.dp)
     ) {
         // Header with title and refresh button
         Row(
@@ -188,15 +191,16 @@ private fun TodayWidgetContent(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = context.getString(R.string.widget_title),
+                //text = context.getString(R.string.widget_title),
+                text = "We Summit Habits - Today",
                 style = TextStyle(
                     fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp,
+                    fontSize = 16.sp,
                     color = GlanceTheme.colors.onSurface
                 ),
                 modifier = GlanceModifier.defaultWeight()
             )
-            
+
             Image(
                 provider = ImageProvider(R.drawable.ic_refresh),
                 contentDescription = context.getString(R.string.widget_refresh),
@@ -285,11 +289,11 @@ private fun StatItem(
         
         Spacer(modifier = GlanceModifier.width(8.dp))
         
-        // Latest value
-        @Suppress("DEPRECATION")
-        statWithSummary.latestValue?.let { value ->
+        // Latest values - show all data points separated by pipes
+        val displayValue = formatAllValues(statWithSummary.latestValues, stat.dataPoints)
+        if (displayValue.isNotEmpty()) {
             Text(
-                text = formatStatValue(value, stat.statType),
+                text = displayValue,
                 style = TextStyle(
                     fontWeight = FontWeight.Bold,
                     fontSize = 16.sp,
@@ -311,10 +315,9 @@ private fun formatTime(timestamp: Long): String {
 /**
  * Format stat value based on its type.
  */
-@Suppress("DEPRECATION")
 private fun formatStatValue(value: String, statType: StatType): String {
     return when (statType) {
-        StatType.NUMBER -> value.toDoubleOrNull()?.let { 
+        StatType.NUMBER -> value.toDoubleOrNull()?.let {
             if (it == it.toLong().toDouble()) it.toLong().toString() else String.format("%.1f", it)
         } ?: value
         StatType.DURATION -> {
@@ -324,6 +327,28 @@ private fun formatStatValue(value: String, statType: StatType): String {
         StatType.RATING -> "★".repeat(value.toIntOrNull() ?: 0)
         StatType.CHECKBOX -> if (value == "true") "✓" else "✗"
     }
+}
+
+/**
+ * Format all values from a record, separated by pipes.
+ * Each value is formatted according to its data point type.
+ */
+private fun formatAllValues(values: List<String>, dataPoints: List<DataPoint>): String {
+    if (values.isEmpty()) return ""
+    
+    return values.mapIndexed { index, value ->
+        val dataPoint = dataPoints.getOrNull(index)
+        if (dataPoint != null) {
+            val formatted = formatStatValue(value, dataPoint.type)
+            if (dataPoint.unit.isNotEmpty() && formatted.isNotEmpty()) {
+                "$formatted ${dataPoint.unit}"
+            } else {
+                formatted
+            }
+        } else {
+            value
+        }
+    }.filter { it.isNotEmpty() }.joinToString(" | ")
 }
 
 /**
