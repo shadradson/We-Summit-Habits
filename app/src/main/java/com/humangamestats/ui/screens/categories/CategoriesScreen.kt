@@ -19,6 +19,8 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.background
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -65,6 +67,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -120,26 +123,43 @@ fun CategoriesScreen(
     
     Scaffold(
         topBar = {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        brush = Brush.horizontalGradient(
+                            colors = listOf(
+                                Color(0xFF6200EE),  // Start color (purple)
+                                Color(0xFF3700B3)   // End color (darker purple)
+                            )
+                        )
+                    )
+            ) {
             Column {
                 TopAppBar(
                     title = { Text(stringResource(R.string.app_name)) },
                     colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer,
-                        titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                        //containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        containerColor = Color.Transparent,
+                        //titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                        titleContentColor = Color.White
                     ),
                     actions = {
                         IconButton(onClick = onSettingsClick) {
                             Icon(
                                 imageVector = Icons.Default.Settings,
-                                contentDescription = stringResource(R.string.settings)
+                                contentDescription = stringResource(R.string.settings),
+                                tint = Color.White
                             )
                         }
                     }
                 )
                 TabRow(
                     selectedTabIndex = selectedTabIndex,
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    //containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    containerColor = Color.Transparent,
+                    //contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    contentColor = Color.White
                 ) {
                     Tab(
                         selected = selectedTabIndex == 0,
@@ -154,6 +174,7 @@ fun CategoriesScreen(
                         icon = { Icon(Icons.Default.Today, contentDescription = null) }
                     )
                 }
+            }
             }
         },
         floatingActionButton = {

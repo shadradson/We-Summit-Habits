@@ -26,6 +26,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -55,6 +56,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
+import androidx.compose.foundation.background
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.material3.Surface
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.humangamestats.R
@@ -97,30 +104,47 @@ fun RecordFormScreen(
     
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = if (uiState.isEditing) {
-                            stringResource(R.string.edit_record)
-                        } else {
-                            stringResource(R.string.add_record)
-                        }
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = onBackClick) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Back"
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(
+                        brush = Brush.horizontalGradient(
+                            colors = listOf(
+                                Color(0xFF6200EE),  // Start color (purple)
+                                Color(0xFF3700B3)   // End color (darker purple)
+                            )
                         )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onPrimaryContainer
-                )
+                    )
             )
+            {
+                TopAppBar(
+                    title = {
+                        Text(
+                            text = if (uiState.isEditing) {
+                                stringResource(R.string.edit_record)
+                            } else {
+                                stringResource(R.string.add_record)
+                            }
+                        )
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = onBackClick) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = "Back"
+                            )
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        //containerColor = MaterialTheme.colorScheme.primaryContainer,
+                        //titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                        //navigationIconContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                        containerColor = Color.Transparent,
+                        titleContentColor = Color.White,
+                        navigationIconContentColor = Color.White
+                    )
+                )
+            }
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->
@@ -582,6 +606,7 @@ private fun formatDateTime(timestamp: Long): String {
 
 /**
  * Dialog for selecting both date and time in one place.
+ * Uses DatePickerDialog for date selection (with reduced padding) and AlertDialog for time.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -607,31 +632,25 @@ private fun DateTimePickerDialog(
         initialMinute = calendar.get(Calendar.MINUTE)
     )
     
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Text(
-                text = if (showingTimePicker) "Select Time" else "Select Date",
-                style = MaterialTheme.typography.titleLarge
-            )
-        },
-        text = {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                if (showingTimePicker) {
+    if (showingTimePicker) {
+        // Time picker uses AlertDialog
+        AlertDialog(
+            onDismissRequest = onDismiss,
+            title = {
+                Text(
+                    text = "Select Time",
+                    style = MaterialTheme.typography.titleLarge
+                )
+            },
+            text = {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
                     TimePicker(state = timePickerState)
-                } else {
-                    DatePicker(
-                        state = datePickerState,
-                        showModeToggle = false
-                    )
                 }
-            }
-        },
-        confirmButton = {
-            if (showingTimePicker) {
+            },
+            confirmButton = {
                 TextButton(
                     onClick = {
                         // Combine date and time into final timestamp
@@ -649,24 +668,52 @@ private fun DateTimePickerDialog(
                 ) {
                     Text("Confirm")
                 }
-            } else {
-                TextButton(
-                    onClick = { showingTimePicker = true }
-                ) {
-                    Text("Next")
-                }
-            }
-        },
-        dismissButton = {
-            if (showingTimePicker) {
+            },
+            dismissButton = {
                 TextButton(onClick = { showingTimePicker = false }) {
                     Text("Back")
                 }
-            } else {
-                TextButton(onClick = onDismiss) {
-                    Text("Cancel")
+            }
+        )
+    } else {
+        // Custom Dialog with full padding control
+        Dialog(
+            onDismissRequest = onDismiss,
+            properties = DialogProperties(usePlatformDefaultWidth = false)
+        ) {
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 3.dp),  // ← DIALOG MARGIN from screen edges
+                shape = MaterialTheme.shapes.extraLarge,
+                tonalElevation = 6.dp
+            ) {
+                Column(
+                    modifier = Modifier.padding(2.dp)  // ← INNER PADDING (customize this)
+                ) {
+                    DatePicker(
+                        state = datePickerState,
+                        showModeToggle = false,
+                        modifier = Modifier.padding(0.dp)  // ← DATEPICKER PADDING
+                    )
+
+                    // Buttons row
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                        horizontalArrangement = Arrangement.End
+                    ) {
+                        TextButton(onClick = onDismiss) {
+                            Text("Cancel")
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        TextButton(onClick = { showingTimePicker = true }) {
+                            Text("Next")
+                        }
+                    }
                 }
             }
         }
-    )
+    }
 }

@@ -219,6 +219,30 @@ class StatDetailViewModel @Inject constructor(
     }
     
     /**
+     * Clone a record with the same values but current date/time.
+     * The new record will appear at the top of the list.
+     */
+    fun cloneRecord(record: StatRecord) {
+        viewModelScope.launch {
+            try {
+                val currentTime = System.currentTimeMillis()
+                val clonedRecord = record.copy(
+                    id = 0, // Reset ID so a new record is created
+                    recordedAt = currentTime,
+                    createdAt = currentTime,
+                    updatedAt = currentTime
+                )
+                recordRepository.saveRecord(clonedRecord)
+                refreshData()
+            } catch (e: Exception) {
+                _uiState.update { state ->
+                    state.copy(error = e.message ?: "Failed to clone record")
+                }
+            }
+        }
+    }
+    
+    /**
      * Clear error message.
      */
     fun clearError() {
