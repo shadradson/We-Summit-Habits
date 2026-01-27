@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Base theme that adapts to light/dark mode -->
+    <!-- Dark mode theme -->
     <style name="Theme.HumanGameStats" parent="Theme.AppCompat.DayNight.NoActionBar">
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
-        <!-- Set window background to match Compose Surface color in light mode -->
+        <!-- Set window background to match Compose Surface color in dark mode -->
         <item name="android:windowBackground">@color/window_background</item>
     </style>
     
-    <!-- Light mode colors -->
-    <color name="window_background">#FFFBFE</color>
+    <!-- Dark mode colors -->
+    <color name="window_background">#1C1B1F</color>
 </resources>

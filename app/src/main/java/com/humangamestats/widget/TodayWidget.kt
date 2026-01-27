@@ -37,6 +37,7 @@ import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.room.Room
+import androidx.room.RoomDatabase
 import com.humangamestats.MainActivity
 import com.humangamestats.R
 import com.humangamestats.data.database.AppDatabase
@@ -78,6 +79,12 @@ class TodayWidget : GlanceAppWidget() {
      * Query the database for stats with records from today.
      */
     private suspend fun getTodayStats(context: Context): List<StatWithSummary> {
+        // Clear the cached database to ensure fresh connection
+        synchronized(this) {
+            database?.close()
+            database = null
+        }
+        
         val db = getDatabase(context)
         val statDao = db.statDao()
         val recordDao = db.statRecordDao()
@@ -85,11 +92,16 @@ class TodayWidget : GlanceAppWidget() {
         // Get today's timestamp range
         val (startOfDay, endOfDay) = getTodayTimestamps()
         
-        android.util.Log.d("TodayWidget", "Today range: $startOfDay to $endOfDay")
+        android.util.Log.d("TodayWidget", "Today range: $startOfDay to $endOfDay (current: ${System.currentTimeMillis()})")
         
         // Get all records and filter to today
         val allRecords = recordDao.getAllRecords()
-        android.util.Log.d("TodayWidget", "Total records: ${allRecords.size}")
+        android.util.Log.d("TodayWidget", "Total records in DB: ${allRecords.size}")
+        
+        // Log each record's timestamp for debugging
+        allRecords.take(5).forEach { record ->
+            android.util.Log.d("TodayWidget", "Record ${record.id}: statId=${record.statId}, recordedAt=${record.recordedAt}")
+        }
         
         val todayRecords = allRecords.filter { it.recordedAt in startOfDay until endOfDay }
         android.util.Log.d("TodayWidget", "Today's records: ${todayRecords.size}")
@@ -98,12 +110,13 @@ class TodayWidget : GlanceAppWidget() {
         android.util.Log.d("TodayWidget", "Today's stat IDs: $todayStatIds")
         
         if (todayStatIds.isEmpty()) {
+            android.util.Log.d("TodayWidget", "No records found for today")
             return emptyList()
         }
         
         // Get all stats and filter to those with today's records
         val allStats = statDao.getAllStats()
-        android.util.Log.d("TodayWidget", "Total stats: ${allStats.size}")
+        android.util.Log.d("TodayWidget", "Total stats in DB: ${allStats.size}")
         
         return allStats
             .filter { it.id in todayStatIds }
@@ -146,8 +159,9 @@ class TodayWidget : GlanceAppWidget() {
         
         /**
          * Get or create the database instance.
-         * Uses a singleton pattern to avoid multiple instances.
-         * Must match the main app's database configuration.
+         * Uses TRUNCATE journal mode instead of WAL to ensure the widget
+         * can immediately see changes made by the main app.
+         * WAL mode can cause stale reads when multiple processes access the db.
          */
         fun getDatabase(context: Context): AppDatabase {
             return database ?: synchronized(this) {
@@ -158,6 +172,7 @@ class TodayWidget : GlanceAppWidget() {
                 )
                     .addMigrations(AppDatabase.MIGRATION_1_2)
                     .fallbackToDestructiveMigration()
+                    .setJournalMode(RoomDatabase.JournalMode.TRUNCATE)
                     .build()
                     .also { database = it }
             }
