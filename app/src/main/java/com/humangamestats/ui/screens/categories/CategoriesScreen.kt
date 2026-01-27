@@ -81,6 +81,7 @@ import com.humangamestats.model.StatCategory
 import com.humangamestats.model.StatRecord
 import com.humangamestats.model.StatType
 import com.humangamestats.model.StatWithSummary
+import com.humangamestats.ui.components.Watermark
 import com.humangamestats.ui.screens.today.TodayViewModel
 import com.humangamestats.ui.theme.StatTypeCheckbox
 import com.humangamestats.ui.theme.StatTypeDuration
@@ -197,6 +198,9 @@ fun CategoriesScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
+            // Watermark in background
+            Watermark()
+            
             when (selectedTabIndex) {
                 0 -> {
                     // Categories tab

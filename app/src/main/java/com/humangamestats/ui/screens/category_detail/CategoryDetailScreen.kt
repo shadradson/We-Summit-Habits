@@ -60,6 +60,7 @@ import com.humangamestats.model.SortOption
 import com.humangamestats.model.StatRecord
 import com.humangamestats.model.StatType
 import com.humangamestats.model.StatWithSummary
+import com.humangamestats.ui.components.Watermark
 import com.humangamestats.ui.screens.categories.CategoryDialog
 import com.humangamestats.ui.theme.StatTypeCheckbox
 import com.humangamestats.ui.theme.StatTypeDuration
@@ -173,6 +174,9 @@ fun CategoryDetailScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
+            // Watermark in background
+            Watermark()
+            
             when {
                 uiState.isLoading -> {
                     CircularProgressIndicator(

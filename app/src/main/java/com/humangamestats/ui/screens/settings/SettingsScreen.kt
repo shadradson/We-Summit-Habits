@@ -56,6 +56,7 @@ import com.humangamestats.BuildConfig
 import com.humangamestats.R
 import com.humangamestats.data.datastore.SettingsDataStore
 import com.humangamestats.data.datastore.ThemeMode
+import com.humangamestats.ui.components.Watermark
 
 /**
  * Settings screen for app configuration.
@@ -107,13 +108,20 @@ fun SettingsScreen(
             }
         }
     ) { paddingValues ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp)
         ) {
+            // Watermark in background
+            Watermark()
+            
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(16.dp)
+            ) {
             // Data Summary Card
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -254,6 +262,7 @@ fun SettingsScreen(
                 icon = Icons.Default.Info,
                 onClick = { }
             )
+            }
         }
     }
 }

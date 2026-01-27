@@ -60,6 +60,7 @@ import com.humangamestats.model.Stat
 import com.humangamestats.model.StatRecord
 import com.humangamestats.model.StatType
 import com.humangamestats.ui.components.StatChart
+import com.humangamestats.ui.components.Watermark
 import com.humangamestats.ui.theme.StatTypeCheckbox
 import com.humangamestats.ui.theme.StatTypeDuration
 import com.humangamestats.ui.theme.StatTypeNumber
@@ -171,6 +172,9 @@ fun StatDetailScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
+            // Watermark in background
+            Watermark()
+            
             when {
                 uiState.isLoading -> {
                     CircularProgressIndicator(
