@@ -121,18 +121,27 @@ class RecordFormViewModel @Inject constructor(
     
     /**
      * Load existing record for editing.
+     * Ensures stat is loaded first to properly map values to data points.
      */
     private fun loadExistingRecord() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             try {
+                // Ensure we have the stat first - fetch it if not already loaded
+                var stat = _uiState.value.stat
+                if (stat == null) {
+                    stat = statRepository.getStatById(statId)
+                    if (stat != null) {
+                        _uiState.update { it.copy(stat = stat) }
+                    }
+                }
+                
                 val record = recordRepository.getRecordById(recordId!!)
                 if (record != null) {
                     existingRecord = record
                     
                     // Extract values from record, ensuring we have values for all data points
                     // Using ID-based lookup with index fallback for legacy data
-                    val stat = _uiState.value.stat
                     val valuesList = if (stat != null) {
                         stat.dataPoints.mapIndexed { index, dp ->
                             record.getValueForDataPoint(dp.id)
@@ -140,6 +149,7 @@ class RecordFormViewModel @Inject constructor(
                                 ?: getDefaultValueForType(dp.type)
                         }
                     } else {
+                        // Fallback: ensure we have enough values for the record
                         record.values.map { it.value }
                     }
                     
@@ -231,13 +241,16 @@ class RecordFormViewModel @Inject constructor(
     
     /**
      * Update a specific data point value.
+     * Expands the values list if needed to accommodate the index.
      */
     fun updateValue(index: Int, value: String) {
         _uiState.update { state ->
             val newValues = state.values.toMutableList()
-            if (index < newValues.size) {
-                newValues[index] = value
+            // Expand the list if needed to accommodate the index
+            while (newValues.size <= index) {
+                newValues.add("")
             }
+            newValues[index] = value
             state.copy(values = newValues)
         }
     }

@@ -83,6 +83,7 @@ import com.humangamestats.model.StatType
 import com.humangamestats.model.StatWithSummary
 import com.humangamestats.ui.components.Watermark
 import com.humangamestats.ui.screens.today.TodayViewModel
+import com.humangamestats.ui.theme.LocalAppColors
 import com.humangamestats.ui.theme.StatTypeCheckbox
 import com.humangamestats.ui.theme.StatTypeDuration
 import com.humangamestats.ui.theme.StatTypeNumber
@@ -123,6 +124,8 @@ fun CategoriesScreen(
         }
     }
     
+    val appColors = LocalAppColors.current
+    
     Scaffold(
         topBar = {
             Box(
@@ -131,8 +134,8 @@ fun CategoriesScreen(
                     .background(
                         brush = Brush.horizontalGradient(
                             colors = listOf(
-                                Color(0xFF6200EE),  // Start color (purple)
-                                Color(0xFF3700B3)   // End color (darker purple)
+                                appColors.gradientStart,
+                                appColors.gradientEnd
                             )
                         )
                     )
@@ -182,7 +185,8 @@ fun CategoriesScreen(
         floatingActionButton = {
             if (selectedTabIndex == 0) {
                 FloatingActionButton(
-                    onClick = { viewModel.showCreateCategoryDialog() }
+                    onClick = { viewModel.showCreateCategoryDialog() },
+                    containerColor = appColors.iconAccent
                 ) {
                     Icon(
                         imageVector = Icons.Default.Add,
@@ -314,6 +318,9 @@ private fun CategoryCard(
             .fillMaxWidth()
             .clickable(onClick = onClick),
         shape = RectangleShape,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.85f)
+        ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
@@ -447,6 +454,9 @@ private fun TodayStatCard(
             .fillMaxWidth()
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(0.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.85f)
+        ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(

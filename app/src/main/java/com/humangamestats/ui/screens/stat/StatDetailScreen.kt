@@ -61,6 +61,7 @@ import com.humangamestats.model.StatRecord
 import com.humangamestats.model.StatType
 import com.humangamestats.ui.components.StatChart
 import com.humangamestats.ui.components.Watermark
+import com.humangamestats.ui.theme.LocalAppColors
 import com.humangamestats.ui.theme.StatTypeCheckbox
 import com.humangamestats.ui.theme.StatTypeDuration
 import com.humangamestats.ui.theme.StatTypeNumber
@@ -81,6 +82,7 @@ fun StatDetailScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
+    val appColors = LocalAppColors.current
     
     // Show error in snackbar
     LaunchedEffect(uiState.error) {
@@ -98,8 +100,8 @@ fun StatDetailScreen(
                     .background(
                         brush = Brush.horizontalGradient(
                             colors = listOf(
-                                Color(0xFF6200EE),  // Start color (purple)
-                                Color(0xFF3700B3)   // End color (darker purple)
+                                appColors.gradientStart,
+                                appColors.gradientEnd
                             )
                         )
                     )
@@ -158,7 +160,10 @@ fun StatDetailScreen(
             }
         },
         floatingActionButton = {
-            FloatingActionButton(onClick = onAddRecordClick) {
+            FloatingActionButton(
+                onClick = onAddRecordClick,
+                containerColor = appColors.iconAccent
+            ) {
                 Icon(
                     imageVector = Icons.Default.Add,
                     contentDescription = stringResource(R.string.add_record)
@@ -396,6 +401,9 @@ private fun RecordCard(
     
     Card(
         modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.85f)
+        ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(

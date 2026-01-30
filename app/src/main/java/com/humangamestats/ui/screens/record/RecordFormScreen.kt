@@ -67,6 +67,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.humangamestats.R
 import com.humangamestats.model.DataPoint
 import com.humangamestats.model.StatType
+import com.humangamestats.ui.theme.LocalAppColors
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -86,6 +87,7 @@ fun RecordFormScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
+    val appColors = LocalAppColors.current
     
     // Handle save completion
     LaunchedEffect(uiState.saveComplete) {
@@ -110,8 +112,8 @@ fun RecordFormScreen(
                     .background(
                         brush = Brush.horizontalGradient(
                             colors = listOf(
-                                Color(0xFF6200EE),  // Start color (purple)
-                                Color(0xFF3700B3)   // End color (darker purple)
+                                appColors.gradientStart,
+                                appColors.gradientEnd
                             )
                         )
                     )

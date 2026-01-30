@@ -48,6 +48,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.humangamestats.model.DataPointTemplate
+import com.humangamestats.ui.theme.LocalAppColors
 
 /**
  * Templates screen for managing reusable data point templates.
@@ -60,6 +61,7 @@ fun TemplatesScreen(
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+    val appColors = LocalAppColors.current
     
     // Show error messages
     LaunchedEffect(uiState.errorMessage) {
@@ -90,7 +92,7 @@ fun TemplatesScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { viewModel.showCreateDialog() },
-                containerColor = MaterialTheme.colorScheme.primary
+                containerColor = appColors.iconAccent
             ) {
                 Icon(
                     imageVector = Icons.Default.Add,

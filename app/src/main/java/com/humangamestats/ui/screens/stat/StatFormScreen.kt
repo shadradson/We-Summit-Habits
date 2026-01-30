@@ -74,6 +74,7 @@ import com.humangamestats.R
 import com.humangamestats.model.DataPoint
 import com.humangamestats.model.DataPointTemplate
 import com.humangamestats.model.StatType
+import com.humangamestats.ui.theme.LocalAppColors
 import com.humangamestats.ui.theme.StatTypeCheckbox
 import com.humangamestats.ui.theme.StatTypeDuration
 import com.humangamestats.ui.theme.StatTypeNumber
@@ -94,6 +95,7 @@ fun StatFormScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
+    val appColors = LocalAppColors.current
     
     // Handle save completion
     LaunchedEffect(uiState.saveComplete) {
@@ -212,8 +214,8 @@ fun StatFormScreen(
                     .background(
                         brush = Brush.horizontalGradient(
                             colors = listOf(
-                                Color(0xFF6200EE),  // Start color (purple)
-                                Color(0xFF3700B3)   // End color (darker purple)
+                                appColors.gradientStart,
+                                appColors.gradientEnd
                             )
                         )
                     )

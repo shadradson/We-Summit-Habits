@@ -62,6 +62,7 @@ import com.humangamestats.model.StatType
 import com.humangamestats.model.StatWithSummary
 import com.humangamestats.ui.components.Watermark
 import com.humangamestats.ui.screens.categories.CategoryDialog
+import com.humangamestats.ui.theme.LocalAppColors
 import com.humangamestats.ui.theme.StatTypeCheckbox
 import com.humangamestats.ui.theme.StatTypeDuration
 import com.humangamestats.ui.theme.StatTypeNumber
@@ -81,6 +82,7 @@ fun CategoryDetailScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
+    val appColors = LocalAppColors.current
     var showSortMenu by remember { mutableStateOf(false) }
     var showCategoryEditDialog by remember { mutableStateOf(false) }
     
@@ -100,8 +102,8 @@ fun CategoryDetailScreen(
                     .background(
                         brush = Brush.horizontalGradient(
                             colors = listOf(
-                                Color(0xFF6200EE),  // Start color (purple)
-                                Color(0xFF3700B3)   // End color (darker purple)
+                                appColors.gradientStart,
+                                appColors.gradientEnd
                             )
                         )
                     )
@@ -160,7 +162,10 @@ fun CategoryDetailScreen(
         }
                  },
         floatingActionButton = {
-            FloatingActionButton(onClick = onAddStatClick) {
+            FloatingActionButton(
+                onClick = onAddStatClick,
+                containerColor = appColors.iconAccent
+            ) {
                 Icon(
                     imageVector = Icons.Default.Add,
                     contentDescription = stringResource(R.string.add_stat)
@@ -253,6 +258,9 @@ private fun StatCard(
     }
     
     Card(
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.85f)
+        ),
         modifier = modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),

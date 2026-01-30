@@ -37,6 +37,9 @@ data class SettingsUiState(
     val defaultSortOption: SortOption = SortOption.RECENT,
     val dateFormat: String = SettingsDataStore.DEFAULT_DATE_FORMAT,
     val useDynamicColors: Boolean = true,
+    val gradientStartColor: Long = SettingsDataStore.DEFAULT_GRADIENT_START,
+    val gradientEndColor: Long = SettingsDataStore.DEFAULT_GRADIENT_END,
+    val iconAccentColor: Long = SettingsDataStore.DEFAULT_ICON_ACCENT,
     val isLoading: Boolean = true,
     val error: String? = null,
     val categoryCount: Int = 0,
@@ -88,6 +91,7 @@ class SettingsViewModel @Inject constructor(
      * Load settings from DataStore.
      */
     private fun loadSettings() {
+        // Load main settings
         combine(
             settingsDataStore.autoCaptureLocation,
             settingsDataStore.themeMode,
@@ -95,19 +99,33 @@ class SettingsViewModel @Inject constructor(
             settingsDataStore.dateFormat,
             settingsDataStore.useDynamicColors
         ) { autoCaptureLocation, themeMode, defaultSortOption, dateFormat, useDynamicColors ->
-            SettingsUiState(
-                autoCaptureLocation = autoCaptureLocation,
-                themeMode = themeMode,
-                defaultSortOption = defaultSortOption,
-                dateFormat = dateFormat,
-                useDynamicColors = useDynamicColors,
-                isLoading = false,
-                categoryCount = _uiState.value.categoryCount,
-                statCount = _uiState.value.statCount,
-                recordCount = _uiState.value.recordCount
-            )
+            _uiState.update { state ->
+                state.copy(
+                    autoCaptureLocation = autoCaptureLocation,
+                    themeMode = themeMode,
+                    defaultSortOption = defaultSortOption,
+                    dateFormat = dateFormat,
+                    useDynamicColors = useDynamicColors,
+                    isLoading = false
+                )
+            }
         }
-            .onEach { state -> _uiState.value = state }
+            .launchIn(viewModelScope)
+        
+        // Load color settings separately (combine only supports 5 flows)
+        combine(
+            settingsDataStore.gradientStartColor,
+            settingsDataStore.gradientEndColor,
+            settingsDataStore.iconAccentColor
+        ) { gradientStart, gradientEnd, iconAccent ->
+            _uiState.update { state ->
+                state.copy(
+                    gradientStartColor = gradientStart,
+                    gradientEndColor = gradientEnd,
+                    iconAccentColor = iconAccent
+                )
+            }
+        }
             .launchIn(viewModelScope)
     }
     
@@ -176,6 +194,33 @@ class SettingsViewModel @Inject constructor(
     fun setUseDynamicColors(enabled: Boolean) {
         viewModelScope.launch {
             settingsDataStore.setUseDynamicColors(enabled)
+        }
+    }
+    
+    /**
+     * Set gradient start color (left side).
+     */
+    fun setGradientStartColor(color: Long) {
+        viewModelScope.launch {
+            settingsDataStore.setGradientStartColor(color)
+        }
+    }
+    
+    /**
+     * Set gradient end color (right side).
+     */
+    fun setGradientEndColor(color: Long) {
+        viewModelScope.launch {
+            settingsDataStore.setGradientEndColor(color)
+        }
+    }
+    
+    /**
+     * Set icon/accent color.
+     */
+    fun setIconAccentColor(color: Long) {
+        viewModelScope.launch {
+            settingsDataStore.setIconAccentColor(color)
         }
     }
     
