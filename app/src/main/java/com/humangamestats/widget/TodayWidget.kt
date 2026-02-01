@@ -268,56 +268,68 @@ private fun StatItem(
     context: Context
 ) {
     val stat = statWithSummary.stat
-
-    Row(
-        modifier = GlanceModifier
-            .fillMaxWidth()
-            .padding(vertical = 6.dp)
-            .clickable(
-                actionStartActivity<MainActivity>(
-                    actionParametersOf(TodayWidget.StatIdKey to stat.id)
+    Column() {
+        Box(
+            modifier = GlanceModifier
+                .fillMaxWidth()
+                .padding(vertical = 4.dp)
+                .background(GlanceTheme.colors.surfaceVariant)
+                .cornerRadius(0.5.dp)
+                .clickable(
+                    actionStartActivity<MainActivity>(
+                        actionParametersOf(TodayWidget.StatIdKey to stat.id)
+                    )
                 )
-            ),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        // Stat info
-        Column(modifier = GlanceModifier.defaultWeight()) {
-            Text(
-                text = stat.name,
-                style = TextStyle(
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 14.sp,
-                    color = GlanceTheme.colors.onSurface
-                ),
-                maxLines = 1
-            )
+        ) {
+            Row(
+                modifier = GlanceModifier
+                    .fillMaxWidth()
+                    .padding(4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Stat info
+                Column(modifier = GlanceModifier.defaultWeight()) {
+                    Text(
+                        text = stat.name,
+                        style = TextStyle(
+                            fontWeight = FontWeight.Medium,
+                            fontSize = 14.sp,
+                            color = GlanceTheme.colors.onSurface
+                        ),
+                        maxLines = 1
+                    )
 
-            // Show entry count and time of last entry
-            val entryText = if (statWithSummary.todayRecordCount == 1) "1 entry" else "${statWithSummary.todayRecordCount} entries"
-            val timeText = statWithSummary.latestRecordedAt?.let { " • ${formatTime(it)}" } ?: ""
-            Text(
-                text = "$entryText$timeText",
-                style = TextStyle(
-                    fontSize = 12.sp,
-                    color = GlanceTheme.colors.onSurfaceVariant
-                )
-            )
+                    // Show entry count and time of last entry
+                    val entryText =
+                        if (statWithSummary.todayRecordCount == 1) "1 entry" else "${statWithSummary.todayRecordCount} entries"
+                    val timeText =
+                        statWithSummary.latestRecordedAt?.let { " • ${formatTime(it)}" } ?: ""
+                    Text(
+                        text = "$entryText$timeText",
+                        style = TextStyle(
+                            fontSize = 12.sp,
+                            color = GlanceTheme.colors.onSurfaceVariant
+                        )
+                    )
+                }
+
+                Spacer(modifier = GlanceModifier.width(8.dp))
+
+                // Latest values - show all data points separated by pipes
+                val displayValue = formatAllValues(statWithSummary.latestValues, stat.dataPoints)
+                if (displayValue.isNotEmpty()) {
+                    Text(
+                        text = displayValue,
+                        style = TextStyle(
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp,
+                            color = GlanceTheme.colors.primary
+                        )
+                    )
+                }
+            }
         }
-
-        Spacer(modifier = GlanceModifier.width(8.dp))
-
-        // Latest values - show all data points separated by pipes
-        val displayValue = formatAllValues(statWithSummary.latestValues, stat.dataPoints)
-        if (displayValue.isNotEmpty()) {
-            Text(
-                text = displayValue,
-                style = TextStyle(
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 16.sp,
-                    color = GlanceTheme.colors.primary
-                )
-            )
-        }
+        Spacer(modifier = GlanceModifier.height(4.dp))
     }
 }
 
