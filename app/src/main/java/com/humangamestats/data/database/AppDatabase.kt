@@ -31,7 +31,7 @@ import com.humangamestats.data.database.entity.StatRecordEntity
         StatRecordEntity::class,
         DataPointTemplateEntity::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -118,9 +118,24 @@ abstract class AppDatabase : RoomDatabase() {
                 // Migrate existing stat_records to use values_json
                 // Convert the existing value into a single value JSON
                 database.execSQL("""
-                    UPDATE stat_records SET values_json = 
+                    UPDATE stat_records SET values_json =
                         '[{"dataPointIndex":0,"value":"' || REPLACE(value, '"', '\"') || '"}]'
                     WHERE values_json = '[]' AND value != ''
+                """)
+            }
+        }
+        
+        /**
+         * Migration from version 2 to version 3.
+         *
+         * Adds:
+         * - default_sort_option column to stat_categories table for pinned sort preferences
+         */
+        val MIGRATION_2_3 = object : Migration(2, 3) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                // Add default_sort_option column to stat_categories table
+                database.execSQL("""
+                    ALTER TABLE stat_categories ADD COLUMN default_sort_option TEXT DEFAULT NULL
                 """)
             }
         }

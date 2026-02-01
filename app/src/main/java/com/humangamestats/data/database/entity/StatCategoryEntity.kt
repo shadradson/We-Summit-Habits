@@ -1,5 +1,6 @@
 package com.humangamestats.data.database.entity
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.humangamestats.model.StatCategory
@@ -14,6 +15,8 @@ data class StatCategoryEntity(
     val title: String,
     val icon: String = "category",
     val sortOrder: Int = 0,
+    @ColumnInfo(name = "default_sort_option")
+    val defaultSortOption: String? = null,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()
 ) {
@@ -25,6 +28,7 @@ data class StatCategoryEntity(
         title = title,
         icon = icon,
         sortOrder = sortOrder,
+        defaultSortOption = defaultSortOption,
         createdAt = createdAt,
         updatedAt = updatedAt
     )
@@ -38,6 +42,7 @@ data class StatCategoryEntity(
             title = category.title,
             icon = category.icon,
             sortOrder = category.sortOrder,
+            defaultSortOption = category.defaultSortOption,
             createdAt = category.createdAt,
             updatedAt = category.updatedAt
         )

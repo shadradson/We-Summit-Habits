@@ -106,6 +106,9 @@ class StatRepository @Inject constructor(
                             .map { statEntity ->
                                 val stat = statEntity.toStat()
                                 val recordCount = statRecordDao.getRecordCountByStat(stat.id)
+                                val todayRecordCount = statRecordDao.countRecordsForStatInDateRange(
+                                    stat.id, currentStart, currentEnd
+                                )
                                 val latestRecord = statRecordDao.getLatestRecordByStat(stat.id)
                                 
                                 val latestValues = latestRecord?.toStatRecord()?.values?.map { it.value } ?: emptyList()
@@ -113,6 +116,7 @@ class StatRepository @Inject constructor(
                                 StatWithSummary(
                                     stat = stat,
                                     recordCount = recordCount,
+                                    todayRecordCount = todayRecordCount,
                                     latestValues = latestValues,
                                     latestRecordedAt = latestRecord?.recordedAt
                                 )

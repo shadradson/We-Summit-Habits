@@ -123,6 +123,7 @@ class TodayWidget : GlanceAppWidget() {
             .map { statEntity ->
                 val stat = statEntity.toStat()
                 val recordCount = recordDao.getRecordCountByStat(stat.id)
+                val todayRecordCount = todayRecords.count { it.statId == stat.id }
                 val latestRecord = recordDao.getLatestRecordByStat(stat.id)
                 
                 val latestValues = latestRecord?.toStatRecord()?.values?.map { it.value } ?: emptyList()
@@ -130,6 +131,7 @@ class TodayWidget : GlanceAppWidget() {
                 StatWithSummary(
                     stat = stat,
                     recordCount = recordCount,
+                    todayRecordCount = todayRecordCount,
                     latestValues = latestValues,
                     latestRecordedAt = latestRecord?.recordedAt
                 )
@@ -170,7 +172,7 @@ class TodayWidget : GlanceAppWidget() {
                     AppDatabase::class.java,
                     AppDatabase.DATABASE_NAME
                 )
-                    .addMigrations(AppDatabase.MIGRATION_1_2)
+                    .addMigrations(AppDatabase.MIGRATION_1_2, AppDatabase.MIGRATION_2_3)
                     .fallbackToDestructiveMigration()
                     .setJournalMode(RoomDatabase.JournalMode.TRUNCATE)
                     .build()
@@ -266,7 +268,7 @@ private fun StatItem(
     context: Context
 ) {
     val stat = statWithSummary.stat
-    
+
     Row(
         modifier = GlanceModifier
             .fillMaxWidth()
@@ -289,21 +291,21 @@ private fun StatItem(
                 ),
                 maxLines = 1
             )
-            
-            // Show time of last entry
-            statWithSummary.latestRecordedAt?.let { timestamp ->
-                Text(
-                    text = formatTime(timestamp),
-                    style = TextStyle(
-                        fontSize = 12.sp,
-                        color = GlanceTheme.colors.onSurfaceVariant
-                    )
+
+            // Show entry count and time of last entry
+            val entryText = if (statWithSummary.todayRecordCount == 1) "1 entry" else "${statWithSummary.todayRecordCount} entries"
+            val timeText = statWithSummary.latestRecordedAt?.let { " • ${formatTime(it)}" } ?: ""
+            Text(
+                text = "$entryText$timeText",
+                style = TextStyle(
+                    fontSize = 12.sp,
+                    color = GlanceTheme.colors.onSurfaceVariant
                 )
-            }
+            )
         }
-        
+
         Spacer(modifier = GlanceModifier.width(8.dp))
-        
+
         // Latest values - show all data points separated by pipes
         val displayValue = formatAllValues(statWithSummary.latestValues, stat.dataPoints)
         if (displayValue.isNotEmpty()) {

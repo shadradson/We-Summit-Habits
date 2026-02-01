@@ -88,4 +88,10 @@ interface StatCategoryDao {
      */
     @Query("SELECT * FROM stat_categories WHERE title LIKE '%' || :query || '%' ORDER BY sortOrder ASC")
     fun searchCategories(query: String): Flow<List<StatCategoryEntity>>
+    
+    /**
+     * Update the default sort option for a category.
+     */
+    @Query("UPDATE stat_categories SET default_sort_option = :sortOption, updatedAt = :updatedAt WHERE id = :categoryId")
+    suspend fun updateDefaultSortOption(categoryId: Long, sortOption: String?, updatedAt: Long = System.currentTimeMillis())
 }

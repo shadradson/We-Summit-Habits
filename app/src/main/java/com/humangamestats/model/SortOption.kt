@@ -13,12 +13,12 @@ enum class SortOption(
     /**
      * Sort by most recent record entry (newest first).
      */
-    RECENT("Recently Recorded", ascending = false),
+    RECENT("Most Recent Entries", ascending = false),
     
     /**
      * Sort by oldest record entry (oldest first).
      */
-    OLDEST("Least Recently Recorded", ascending = true),
+    OLDEST("Least Recent Entries", ascending = true),
     
     /**
      * Sort by highest numeric value (highest first).
@@ -35,7 +35,7 @@ enum class SortOption(
     /**
      * Sort alphabetically by name (A-Z).
      */
-    ALPHABETICAL("Alphabetical", ascending = true),
+    ALPHABETICAL("Alphabetical (A-Z)", ascending = true),
     
     /**
      * Sort alphabetically reversed (Z-A).

@@ -20,8 +20,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material.icons.filled.ShowChart
 import androidx.compose.material.icons.filled.Sort
+import androidx.compose.material.icons.outlined.PushPin
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -140,10 +142,19 @@ fun CategoryDetailScreen(
                         SortDropdownMenu(
                             expanded = showSortMenu,
                             currentSort = uiState.sortOption,
+                            defaultSort = uiState.defaultSortOption,
                             onDismiss = { showSortMenu = false },
                             onSortSelected = { sortOption ->
                                 viewModel.setSortOption(sortOption)
                                 showSortMenu = false
+                            },
+                            onPinClick = { sortOption ->
+                                // If already pinned, unpin it; otherwise pin the new one
+                                if (uiState.defaultSortOption == sortOption) {
+                                    viewModel.setDefaultSortOption(null)
+                                } else {
+                                    viewModel.setDefaultSortOption(sortOption)
+                                }
                             }
                         )
                     }
@@ -331,24 +342,57 @@ private fun StatCard(
 private fun SortDropdownMenu(
     expanded: Boolean,
     currentSort: SortOption,
+    defaultSort: SortOption?,
     onDismiss: () -> Unit,
-    onSortSelected: (SortOption) -> Unit
+    onSortSelected: (SortOption) -> Unit,
+    onPinClick: (SortOption) -> Unit
 ) {
     DropdownMenu(
         expanded = expanded,
         onDismissRequest = onDismiss
     ) {
         SortOption.forStatList().forEach { option ->
+            val isPinned = option == defaultSort
             DropdownMenuItem(
                 text = {
-                    Text(
-                        text = option.displayName,
-                        color = if (option == currentSort) {
-                            MaterialTheme.colorScheme.primary
-                        } else {
-                            MaterialTheme.colorScheme.onSurface
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = option.displayName,
+                            color = if (option == currentSort) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.onSurface
+                            },
+                            modifier = Modifier.weight(1f)
+                        )
+                        IconButton(
+                            onClick = { onPinClick(option) },
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                            Icon(
+                                imageVector = if (isPinned) {
+                                    Icons.Filled.PushPin
+                                } else {
+                                    Icons.Outlined.PushPin
+                                },
+                                contentDescription = if (isPinned) {
+                                    "Unpin as default"
+                                } else {
+                                    "Pin as default"
+                                },
+                                tint = if (isPinned) {
+                                    MaterialTheme.colorScheme.primary
+                                } else {
+                                    MaterialTheme.colorScheme.onSurfaceVariant
+                                },
+                                modifier = Modifier.size(18.dp)
+                            )
                         }
-                    )
+                    }
                 },
                 onClick = { onSortSelected(option) }
             )
@@ -444,12 +488,12 @@ private fun formatRelativeDate(timestamp: Long): String {
     return when {
         days == 0L -> "Today"
         days == 1L -> "Yesterday"
-        days < 7L -> "$days days"
-        weeks == 1L -> "1 week"
-        weeks < 4L -> "$weeks weeks"
-        months == 1L -> "1 month"
-        months < 12L -> "$months months"
-        years == 1L -> "1 year"
-        else -> "$years years"
+        days < 7L -> "$days days ago"
+        weeks == 1L -> "1 week ago"
+        weeks < 4L -> "$weeks weeks ago"
+        months == 1L -> "1 month ago"
+        months < 12L -> "$months months ago"
+        years == 1L -> "1 year ago"
+        else -> "$years years ago"
     }
 }

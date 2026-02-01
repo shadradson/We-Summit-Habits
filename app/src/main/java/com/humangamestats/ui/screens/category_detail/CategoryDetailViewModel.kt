@@ -32,6 +32,7 @@ data class CategoryDetailUiState(
     val isLoading: Boolean = true,
     val error: String? = null,
     val sortOption: SortOption = SortOption.RECENT,
+    val defaultSortOption: SortOption? = null,
     val statToDelete: Stat? = null
 )
 
@@ -62,10 +63,24 @@ class CategoryDetailViewModel @Inject constructor(
      * Load the category details.
      */
     private fun loadCategory() {
+        var initialSortApplied = false
         categoryRepository.getCategoryByIdFlow(categoryId)
             .onEach { category ->
+                val defaultSort = category?.defaultSortOption?.let {
+                    SortOption.fromString(it)
+                }
+                
+                // Apply the default sort option only on initial load
+                if (!initialSortApplied && defaultSort != null) {
+                    _sortOption.value = defaultSort
+                    initialSortApplied = true
+                }
+                
                 _uiState.update { state ->
-                    state.copy(category = category)
+                    state.copy(
+                        category = category,
+                        defaultSortOption = defaultSort
+                    )
                 }
             }
             .catch { e ->
@@ -210,6 +225,29 @@ class CategoryDetailViewModel @Inject constructor(
     fun clearError() {
         _uiState.update { state ->
             state.copy(error = null)
+        }
+    }
+    
+    /**
+     * Set the default sort option for the category.
+     * When pinned, this sort option will be used when opening the category.
+     * @param sortOption The sort option to set as default, or null to clear
+     */
+    fun setDefaultSortOption(sortOption: SortOption?) {
+        viewModelScope.launch {
+            try {
+                categoryRepository.updateDefaultSortOption(
+                    categoryId = categoryId,
+                    sortOption = sortOption?.name
+                )
+                _uiState.update { state ->
+                    state.copy(defaultSortOption = sortOption)
+                }
+            } catch (e: Exception) {
+                _uiState.update { state ->
+                    state.copy(error = e.message ?: "Failed to set default sort")
+                }
+            }
         }
     }
 }

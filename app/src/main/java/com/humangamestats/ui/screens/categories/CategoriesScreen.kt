@@ -83,6 +83,7 @@ import com.humangamestats.model.StatType
 import com.humangamestats.model.StatWithSummary
 import com.humangamestats.ui.components.Watermark
 import com.humangamestats.ui.screens.today.TodayViewModel
+//import com.humangamestats.ui.screens.today.formatTime
 import com.humangamestats.ui.theme.LocalAppColors
 import com.humangamestats.ui.theme.StatTypeCheckbox
 import com.humangamestats.ui.theme.StatTypeDuration
@@ -466,30 +467,30 @@ private fun TodayStatCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Stat type indicator
-            Icon(
+            /*Icon(
                 imageVector = Icons.Default.ShowChart,
                 contentDescription = null,
                 modifier = Modifier.size(40.dp),
                 tint = typeColor
             )
             
-            Spacer(modifier = Modifier.width(8.dp))
-            
+            Spacer(modifier = Modifier.width(8.dp))*/
+
             // Stat info
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = stat.name,
                     style = MaterialTheme.typography.titleMedium
                 )
-                // Show time of last entry
-                statWithSummary.latestRecordedAt?.let { timestamp ->
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = formatTime(timestamp),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
+                // Show entry count and time of last entry
+                val entryText = if (statWithSummary.todayRecordCount == 1) "1 entry" else "${statWithSummary.todayRecordCount} entries"
+                val timeText = statWithSummary.latestRecordedAt?.let { " • ${formatTime(it)}" } ?: ""
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "$entryText$timeText",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
             
             // Latest values - show all data points separated by pipes
@@ -498,14 +499,14 @@ private fun TodayStatCard(
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
                         text = displayValue,
-                        style = MaterialTheme.typography.titleLarge,
+                        style = MaterialTheme.typography.titleMedium,
                         color = typeColor
                     )
-                    Text(
+                    /*Text(
                         text = stat.dataPointsSummary,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    )*/
                 }
             }
         }

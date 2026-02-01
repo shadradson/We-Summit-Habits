@@ -132,4 +132,15 @@ class StatCategoryRepository @Inject constructor(
             statCategoryDao.insertCategories(entities)
         }
     }
+    
+    /**
+     * Update the default sort option for a category.
+     * @param categoryId The ID of the category to update
+     * @param sortOption The sort option name (e.g., "RECENT", "ALPHABETICAL"), or null to clear
+     */
+    suspend fun updateDefaultSortOption(categoryId: Long, sortOption: String?) {
+        withContext(ioDispatcher) {
+            statCategoryDao.updateDefaultSortOption(categoryId, sortOption)
+        }
+    }
 }

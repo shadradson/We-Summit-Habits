@@ -5,13 +5,14 @@ import kotlinx.serialization.Serializable
 /**
  * Domain model representing a stat category.
  * Categories are top-level containers that group related stats together.
- * 
+ *
  * Examples: "Workout", "Food", "Sleep", "Mood"
- * 
+ *
  * @property id Unique identifier for the category
  * @property title Display name of the category
  * @property icon Icon identifier for visual representation
- * @property sortOrder Order in which categoriesappear in the list
+ * @property sortOrder Order in which categories appear in the list
+ * @property defaultSortOption Default sort option when opening this category (null = RECENT)
  * @property createdAt Timestamp when the category was created
  * @property updatedAt Timestamp when the category was last updated
  */
@@ -21,6 +22,7 @@ data class StatCategory(
     val title: String,
     val icon: String = "category",
     val sortOrder: Int = 0,
+    val defaultSortOption: String? = null,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()
 ) {

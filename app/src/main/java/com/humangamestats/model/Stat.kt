@@ -124,6 +124,7 @@ data class Stat(
 data class StatWithSummary(
     val stat: Stat,
     val recordCount: Int = 0,
+    val todayRecordCount: Int = 0,
     val latestValues: List<String> = emptyList(),
     val latestRecordedAt: Long? = null
 ) {

@@ -159,15 +159,15 @@ private fun TodayStatCard(
                     text = stat.name,
                     style = MaterialTheme.typography.titleMedium
                 )
-                // Show time of last entry
-                statWithSummary.latestRecordedAt?.let { timestamp ->
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = formatTime(timestamp),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
+                // Show entry count and time of last entry
+                val entryText = if (statWithSummary.todayRecordCount == 1) "1 entry" else "${statWithSummary.todayRecordCount} entries"
+                val timeText = statWithSummary.latestRecordedAt?.let { " • ${formatTime(it)}" } ?: ""
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "$entryText$timeText",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
             
             // Latest values - show all data points separated by pipes

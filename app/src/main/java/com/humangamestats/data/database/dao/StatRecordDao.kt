@@ -183,4 +183,10 @@ interface StatRecordDao {
      */
     @Query("SELECT * FROM stat_records WHERE stat_id = :statId ORDER BY recorded_at DESC")
     suspend fun getRecordsByStatSync(statId: Long): List<StatRecordEntity>
+    
+    /**
+     * Count records for a stat within a date range.
+     */
+    @Query("SELECT COUNT(*) FROM stat_records WHERE stat_id = :statId AND recorded_at >= :startOfDay AND recorded_at < :endOfDay")
+    suspend fun countRecordsForStatInDateRange(statId: Long, startOfDay: Long, endOfDay: Long): Int
 }
