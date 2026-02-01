@@ -144,14 +144,14 @@ private fun TodayStatCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Stat type indicator
-            Icon(
+            /*Icon(
                 imageVector = Icons.Default.ShowChart,
                 contentDescription = null,
                 modifier = Modifier.size(40.dp),
                 tint = typeColor
             )
-            
-            Spacer(modifier = Modifier.width(8.dp))
+
+            Spacer(modifier = Modifier.width(8.dp))*/
             
             // Stat info
             Column(modifier = Modifier.weight(1f)) {

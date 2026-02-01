@@ -274,14 +274,14 @@ private fun StatCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Stat type indicator
-            Icon(
+            /*Icon(
                 imageVector = Icons.Default.ShowChart,
                 contentDescription = null,
                 modifier = Modifier.size(40.dp),
                 tint = typeColor
             )
             
-            Spacer(modifier = Modifier.width(8.dp))
+            Spacer(modifier = Modifier.width(8.dp))*/
             
             // Stat info
             Column(modifier = Modifier.weight(1f)) {
@@ -444,12 +444,12 @@ private fun formatRelativeDate(timestamp: Long): String {
     return when {
         days == 0L -> "Today"
         days == 1L -> "Yesterday"
-        days < 7L -> "$days days ago"
-        weeks == 1L -> "1 week ago"
-        weeks < 4L -> "$weeks weeks ago"
-        months == 1L -> "1 month ago"
-        months < 12L -> "$months months ago"
-        years == 1L -> "1 year ago"
-        else -> "$years years ago"
+        days < 7L -> "$days days"
+        weeks == 1L -> "1 week"
+        weeks < 4L -> "$weeks weeks"
+        months == 1L -> "1 month"
+        months < 12L -> "$months months"
+        years == 1L -> "1 year"
+        else -> "$years years"
     }
 }

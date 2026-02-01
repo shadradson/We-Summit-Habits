@@ -17,9 +17,13 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -48,9 +52,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.delay
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -491,7 +497,8 @@ private fun NumberInputWithArrows(
 }
 
 /**
- * Duration input with up/down arrows for hours, minutes, and seconds.
+ * Duration input with up/down arrows for hours, minutes, and seconds,
+ * plus a stopwatch feature for timing.
  */
 @Composable
 private fun DurationInputWithArrows(
@@ -503,42 +510,144 @@ private fun DurationInputWithArrows(
     val minutes = ((millis % 3600000) / 60000).toInt()
     val seconds = ((millis % 60000) / 1000).toInt()
     
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        // Hours
-        DurationUnit(
-            value = hours,
-            label = "Hours",
-            onValueChange = { newHours ->
-                val h = newHours.coerceAtLeast(0)
-                onMillisChange((h * 3600000L) + (minutes * 60000L) + (seconds * 1000L))
-            },
-            modifier = Modifier.weight(1f)
+    // Stopwatch state
+    var isRunning by remember { mutableStateOf(false) }
+    var stopwatchMillis by remember { mutableLongStateOf(0L) }
+    var startTime by remember { mutableLongStateOf(0L) }
+    
+    // Stopwatch timer effect
+    LaunchedEffect(isRunning) {
+        if (isRunning) {
+            startTime = System.currentTimeMillis() - stopwatchMillis
+            while (isRunning) {
+                stopwatchMillis = System.currentTimeMillis() - startTime
+                delay(100L) // Update every 100ms for smooth display
+            }
+        }
+    }
+    
+    // Format stopwatch time
+    val stopwatchHours = (stopwatchMillis / 3600000).toInt()
+    val stopwatchMinutes = ((stopwatchMillis % 3600000) / 60000).toInt()
+    val stopwatchSeconds = ((stopwatchMillis % 60000) / 1000).toInt()
+    val stopwatchDisplay = String.format("%02d:%02d:%02d", stopwatchHours, stopwatchMinutes, stopwatchSeconds)
+    
+    Column(modifier = modifier.fillMaxWidth()) {
+        // Manual duration input row
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            // Hours
+            DurationUnit(
+                value = hours,
+                label = "Hours",
+                onValueChange = { newHours ->
+                    val h = newHours.coerceAtLeast(0)
+                    onMillisChange((h * 3600000L) + (minutes * 60000L) + (seconds * 1000L))
+                },
+                modifier = Modifier.weight(1f)
+            )
+            
+            // Minutes
+            DurationUnit(
+                value = minutes,
+                label = "Min",
+                onValueChange = { newMinutes ->
+                    val m = newMinutes.coerceIn(0, 59)
+                    onMillisChange((hours * 3600000L) + (m * 60000L) + (seconds * 1000L))
+                },
+                modifier = Modifier.weight(1f)
+            )
+            
+            // Seconds
+            DurationUnit(
+                value = seconds,
+                label = "Sec",
+                onValueChange = { newSeconds ->
+                    val s = newSeconds.coerceIn(0, 59)
+                    onMillisChange((hours * 3600000L) + (minutes * 60000L) + (s * 1000L))
+                },
+                modifier = Modifier.weight(1f)
+            )
+        }
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        // Stopwatch section
+        Text(
+            text = "Stopwatch",
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         
-        // Minutes
-        DurationUnit(
-            value = minutes,
-            label = "Min",
-            onValueChange = { newMinutes ->
-                val m = newMinutes.coerceIn(0, 59)
-                onMillisChange((hours * 3600000L) + (m * 60000L) + (seconds * 1000L))
-            },
-            modifier = Modifier.weight(1f)
+        Spacer(modifier = Modifier.height(8.dp))
+        
+        // Stopwatch display
+        Text(
+            text = stopwatchDisplay,
+            style = MaterialTheme.typography.displaySmall,
+            color = if (isRunning) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.align(Alignment.CenterHorizontally)
         )
         
-        // Seconds
-        DurationUnit(
-            value = seconds,
-            label = "Sec",
-            onValueChange = { newSeconds ->
-                val s = newSeconds.coerceIn(0, 59)
-                onMillisChange((hours * 3600000L) + (minutes * 60000L) + (s * 1000L))
-            },
-            modifier = Modifier.weight(1f)
-        )
+        Spacer(modifier = Modifier.height(8.dp))
+        
+        // Stopwatch controls
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            // Start/Pause button
+            OutlinedButton(
+                onClick = { isRunning = !isRunning },
+                modifier = Modifier.weight(1f)
+            ) {
+                Icon(
+                    imageVector = if (isRunning) Icons.Default.Pause else Icons.Default.PlayArrow,
+                    contentDescription = if (isRunning) "Pause" else "Start",
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(if (isRunning) "Pause" else "Start")
+            }
+            
+            // Save button - copies stopwatch time to duration field
+            OutlinedButton(
+                onClick = {
+                    isRunning = false
+                    onMillisChange(stopwatchMillis)
+                },
+                enabled = stopwatchMillis > 0,
+                modifier = Modifier.weight(1f)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Save,
+                    contentDescription = "Save",
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text("Save")
+            }
+            
+            // Clear button
+            OutlinedButton(
+                onClick = {
+                    isRunning = false
+                    stopwatchMillis = 0L
+                },
+                enabled = stopwatchMillis > 0 || isRunning,
+                modifier = Modifier.weight(1f)
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Clear,
+                    contentDescription = "Clear",
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text("Clear")
+            }
+        }
     }
 }
 
