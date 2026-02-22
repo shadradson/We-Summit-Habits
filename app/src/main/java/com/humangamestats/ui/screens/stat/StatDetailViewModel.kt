@@ -29,6 +29,30 @@ import java.util.Locale
 import javax.inject.Inject
 
 /**
+ * Date range filter options for the chart.
+ */
+enum class ChartDateFilter(val label: String) {
+    DAYS_30("30 Days"),
+    DAYS_90("90 Days"),
+    DAYS_180("180 Days"),
+    YEAR_1("1 Year"),
+    YEARS_2("2 Years"),
+    ALL_TIME("All Time")
+}
+
+private fun ChartDateFilter.toStartTime(): Long {
+    val now = System.currentTimeMillis()
+    return when (this) {
+        ChartDateFilter.DAYS_30  -> now - 30L  * 86_400_000L
+        ChartDateFilter.DAYS_90  -> now - 90L  * 86_400_000L
+        ChartDateFilter.DAYS_180 -> now - 180L * 86_400_000L
+        ChartDateFilter.YEAR_1   -> now - 365L * 86_400_000L
+        ChartDateFilter.YEARS_2  -> now - 730L * 86_400_000L
+        ChartDateFilter.ALL_TIME -> 0L
+    }
+}
+
+/**
  * Represents a group of records for a single day.
  */
 data class DayGroup(
@@ -50,7 +74,8 @@ data class StatDetailUiState(
     val error: String? = null,
     val sortOption: SortOption = SortOption.RECENT,
     val recordToDelete: StatRecord? = null,
-    val showChart: Boolean = true
+    val showChart: Boolean = true,
+    val chartDateFilter: ChartDateFilter = ChartDateFilter.ALL_TIME
 )
 
 /**
@@ -128,12 +153,13 @@ class StatDetailViewModel @Inject constructor(
     }
     
     /**
-     * Load chart data (recent records in chronological order).
+     * Load chart data filtered by the current date range selection.
      */
     private fun loadChartData() {
         viewModelScope.launch {
             try {
-                val chartData = recordRepository.getRecordsForChart(statId, 30)
+                val startTime = _uiState.value.chartDateFilter.toStartTime()
+                val chartData = recordRepository.getRecordsForChartFiltered(statId, startTime)
                 _uiState.update { state ->
                     state.copy(chartData = chartData)
                 }
@@ -141,6 +167,14 @@ class StatDetailViewModel @Inject constructor(
                 // Chart data is optional, don't show error
             }
         }
+    }
+
+    /**
+     * Set the chart date filter and reload chart data.
+     */
+    fun setChartDateFilter(filter: ChartDateFilter) {
+        _uiState.update { it.copy(chartDateFilter = filter) }
+        loadChartData()
     }
     
     /**

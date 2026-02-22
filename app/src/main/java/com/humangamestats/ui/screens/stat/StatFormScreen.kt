@@ -74,6 +74,7 @@ import com.humangamestats.R
 import com.humangamestats.model.DataPoint
 import com.humangamestats.model.DataPointTemplate
 import com.humangamestats.model.StatType
+import com.humangamestats.ui.components.DataPointColorPicker
 import com.humangamestats.ui.theme.LocalAppColors
 import com.humangamestats.ui.theme.StatTypeCheckbox
 import com.humangamestats.ui.theme.StatTypeDuration
@@ -126,9 +127,11 @@ fun StatFormScreen(
             label = uiState.dialogDataPointLabel,
             type = uiState.dialogDataPointType,
             unit = uiState.dialogDataPointUnit,
+            color = uiState.dialogDataPointColor,
             onLabelChange = viewModel::updateDialogLabel,
             onTypeChange = viewModel::updateDialogType,
             onUnitChange = viewModel::updateDialogUnit,
+            onColorChange = viewModel::updateDialogColor,
             onDismiss = viewModel::dismissDataPointDialog,
             onSave = viewModel::saveDataPoint
         )
@@ -609,9 +612,11 @@ private fun DataPointDialog(
     label: String,
     type: StatType,
     unit: String,
+    color: String?,
     onLabelChange: (String) -> Unit,
     onTypeChange: (StatType) -> Unit,
     onUnitChange: (String) -> Unit,
+    onColorChange: (String?) -> Unit,
     onDismiss: () -> Unit,
     onSave: () -> Unit
 ) {
@@ -630,16 +635,16 @@ private fun DataPointDialog(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
-                
+
                 Spacer(modifier = Modifier.height(16.dp))
-                
+
                 Text(
                     text = "Type",
                     style = MaterialTheme.typography.labelMedium
                 )
-                
+
                 Spacer(modifier = Modifier.height(8.dp))
-                
+
                 FlowRow(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
@@ -653,15 +658,30 @@ private fun DataPointDialog(
                         )
                     }
                 }
-                
+
                 Spacer(modifier = Modifier.height(16.dp))
-                
+
                 OutlinedTextField(
                     value = unit,
                     onValueChange = onUnitChange,
                     label = { Text("Unit (optional)") },
                     placeholder = { Text("e.g., lbs, kg, miles") },
                     singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = "Chart Color",
+                    style = MaterialTheme.typography.labelMedium
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                DataPointColorPicker(
+                    selectedColor = color,
+                    onColorSelected = onColorChange,
                     modifier = Modifier.fillMaxWidth()
                 )
             }

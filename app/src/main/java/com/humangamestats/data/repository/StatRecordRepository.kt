@@ -226,6 +226,16 @@ class StatRecordRepository @Inject constructor(
             statRecordDao.getRecordsForChart(statId, limit).map { it.toStatRecord() }
         }
     }
+
+    /**
+     * Get records for chart data after a given start time (oldest first).
+     * Pass startTime = 0L to get all records (All Time).
+     */
+    suspend fun getRecordsForChartFiltered(statId: Long, startTime: Long): List<StatRecord> {
+        return withContext(ioDispatcher) {
+            statRecordDao.getRecordsForChartFiltered(statId, startTime).map { it.toStatRecord() }
+        }
+    }
     
     /**
      * Insert multiple records (for import).

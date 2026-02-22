@@ -40,6 +40,7 @@ data class StatFormUiState(
     val dialogDataPointLabel: String = "",
     val dialogDataPointType: StatType = StatType.NUMBER,
     val dialogDataPointUnit: String = "",
+    val dialogDataPointColor: String? = null,
     // For data point delete confirmation
     val showDeleteConfirmation: Boolean = false,
     val dataPointToDeleteIndex: Int? = null,
@@ -171,7 +172,8 @@ class StatFormViewModel @Inject constructor(
                 editingDataPointIndex = null,
                 dialogDataPointLabel = "",
                 dialogDataPointType = StatType.NUMBER,
-                dialogDataPointUnit = ""
+                dialogDataPointUnit = "",
+                dialogDataPointColor = null
             )
         }
     }
@@ -187,7 +189,8 @@ class StatFormViewModel @Inject constructor(
                 editingDataPointIndex = index,
                 dialogDataPointLabel = dataPoint.label,
                 dialogDataPointType = dataPoint.type,
-                dialogDataPointUnit = dataPoint.unit
+                dialogDataPointUnit = dataPoint.unit,
+                dialogDataPointColor = dataPoint.color
             )
         }
     }
@@ -227,6 +230,15 @@ class StatFormViewModel @Inject constructor(
             state.copy(dialogDataPointUnit = unit)
         }
     }
+
+    /**
+     * Update the dialog data point color (hex string or null for auto).
+     */
+    fun updateDialogColor(color: String?) {
+        _uiState.update { state ->
+            state.copy(dialogDataPointColor = color)
+        }
+    }
     
     /**
      * Save the data point from the dialog.
@@ -246,7 +258,8 @@ class StatFormViewModel @Inject constructor(
                 id = existingDataPoint.id, // Preserve the existing ID
                 label = currentState.dialogDataPointLabel.trim(),
                 type = currentState.dialogDataPointType,
-                unit = currentState.dialogDataPointUnit.trim()
+                unit = currentState.dialogDataPointUnit.trim(),
+                color = currentState.dialogDataPointColor
             )
             currentState.dataPoints.toMutableList().apply {
                 this[currentState.editingDataPointIndex] = updatedDataPoint
@@ -256,7 +269,8 @@ class StatFormViewModel @Inject constructor(
             val newDataPoint = DataPoint(
                 label = currentState.dialogDataPointLabel.trim(),
                 type = currentState.dialogDataPointType,
-                unit = currentState.dialogDataPointUnit.trim()
+                unit = currentState.dialogDataPointUnit.trim(),
+                color = currentState.dialogDataPointColor
             )
             currentState.dataPoints + newDataPoint
         }

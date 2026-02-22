@@ -75,3 +75,37 @@ val ChartAccent = Color(0xFF9DCBD9)
 val ChartLine = Color(0xFF006782)
 val ChartFill = Color(0x3367D3FD)  // Semi-transparent cyan
 val ChartGrid = Color(0xFFDCE3E9)
+
+// Default data point chart colors — cycle through these when no color is specified
+val defaultDataPointColors = listOf(
+    Color(0xFF4FC3F7), // Light Blue
+    Color(0xFFEF9A9A), // Salmon/Red
+    Color(0xFFA5D6A7), // Light Green
+    Color(0xFFFFCC80), // Light Orange
+)
+
+// Preset color options shown in the color picker (null = Auto)
+val presetDataPointColors: List<String?> = listOf(
+    null,        // Auto (uses default cycling)
+    "#E53935",   // Red
+    "#FB8C00",   // Orange
+    "#FDD835",   // Yellow
+    "#43A047",   // Green
+    "#4FC3F7",   // Light Blue
+    "#1E88E5",   // Blue
+    "#8E24AA",   // Purple
+    "#F06292",   // Pink
+)
+
+/**
+ * Convert a hex color string to a Compose Color.
+ * Falls back to the default cycling color at [fallbackIndex] if null or unparseable.
+ */
+fun String?.toChartColor(fallbackIndex: Int = 0): Color {
+    if (this == null) return defaultDataPointColors[fallbackIndex % defaultDataPointColors.size]
+    return try {
+        Color(android.graphics.Color.parseColor(this))
+    } catch (e: Exception) {
+        defaultDataPointColors[fallbackIndex % defaultDataPointColors.size]
+    }
+}

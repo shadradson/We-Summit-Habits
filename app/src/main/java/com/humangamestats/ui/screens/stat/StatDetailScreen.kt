@@ -17,7 +17,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
@@ -26,6 +28,8 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -204,15 +208,23 @@ fun StatDetailScreen(
                         }
                         
                         // Chart
-                        if (uiState.showChart && uiState.chartData.size >= 2) {
-                            item {
-                                StatChart(
-                                    records = uiState.chartData,
-                                    statType = uiState.stat?.statType ?: StatType.NUMBER,
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .height(200.dp)
-                                )
+                        uiState.stat?.let { stat ->
+                            if (uiState.showChart && uiState.chartData.size >= 2) {
+                                item {
+                                    ChartDateFilterRow(
+                                        selectedFilter = uiState.chartDateFilter,
+                                        onFilterSelected = viewModel::setChartDateFilter,
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    StatChart(
+                                        records = uiState.chartData,
+                                        dataPoints = stat.dataPoints,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(220.dp)
+                                    )
+                                }
                             }
                         }
                         
@@ -276,6 +288,54 @@ fun StatDetailScreen(
                 }
             }
         )
+    }
+}
+
+@Composable
+private fun ChartDateFilterRow(
+    selectedFilter: ChartDateFilter,
+    onFilterSelected: (ChartDateFilter) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.End,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = "Period:",
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(modifier = Modifier.width(4.dp))
+        Box {
+            TextButton(onClick = { expanded = true }) {
+                Text(selectedFilter.label)
+                Icon(
+                    imageVector = Icons.Default.ArrowDropDown,
+                    contentDescription = null
+                )
+            }
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
+                ChartDateFilter.entries.forEach { filter ->
+                    DropdownMenuItem(
+                        text = { Text(filter.label) },
+                        onClick = {
+                            onFilterSelected(filter)
+                            expanded = false
+                        },
+                        leadingIcon = if (filter == selectedFilter) {
+                            { Icon(Icons.Default.Check, contentDescription = null) }
+                        } else null
+                    )
+                }
+            }
+        }
     }
 }
 

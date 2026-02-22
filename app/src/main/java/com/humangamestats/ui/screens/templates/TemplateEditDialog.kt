@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.dp
 import com.humangamestats.model.DataPoint
 import com.humangamestats.model.DataPointTemplate
 import com.humangamestats.model.StatType
+import com.humangamestats.ui.components.DataPointColorPicker
 
 /**
  * Dialog for creating or editing a data point template.
@@ -323,27 +324,27 @@ private fun DataPointEditor(
                 ) {
                     OutlinedTextField(
                         value = dataPoint.minValue?.toString() ?: "",
-                        onValueChange = { 
+                        onValueChange = {
                             onUpdate(dataPoint.copy(minValue = it.toDoubleOrNull()))
                         },
                         label = { Text("Min") },
                         singleLine = true,
                         modifier = Modifier.weight(1f)
                     )
-                    
+
                     OutlinedTextField(
                         value = dataPoint.maxValue?.toString() ?: "",
-                        onValueChange = { 
+                        onValueChange = {
                             onUpdate(dataPoint.copy(maxValue = it.toDoubleOrNull()))
                         },
                         label = { Text("Max") },
                         singleLine = true,
                         modifier = Modifier.weight(1f)
                     )
-                    
+
                     OutlinedTextField(
                         value = dataPoint.step?.toString() ?: "",
-                        onValueChange = { 
+                        onValueChange = {
                             onUpdate(dataPoint.copy(step = it.toDoubleOrNull()))
                         },
                         label = { Text("Step") },
@@ -353,6 +354,18 @@ private fun DataPointEditor(
                     )
                 }
             }
+
+            // Chart color picker
+            Text(
+                text = "Chart Color",
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            DataPointColorPicker(
+                selectedColor = dataPoint.color,
+                onColorSelected = { onUpdate(dataPoint.copy(color = it)) },
+                modifier = Modifier.fillMaxWidth()
+            )
         }
     }
 }

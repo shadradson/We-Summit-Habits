@@ -23,7 +23,8 @@ data class DataPoint(
     val unit: String = "",
     val minValue: Double? = null,
     val maxValue: Double? = null,
-    val step: Double? = null
+    val step: Double? = null,
+    val color: String? = null
 ) {
     companion object {
         /**

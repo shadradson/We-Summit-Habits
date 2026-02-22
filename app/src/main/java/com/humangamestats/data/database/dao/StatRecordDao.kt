@@ -189,4 +189,11 @@ interface StatRecordDao {
      */
     @Query("SELECT COUNT(*) FROM stat_records WHERE stat_id = :statId AND recorded_at >= :startOfDay AND recorded_at < :endOfDay")
     suspend fun countRecordsForStatInDateRange(statId: Long, startOfDay: Long, endOfDay: Long): Int
+
+    /**
+     * Get records for chart data after a given start time (oldest first, no limit).
+     * Pass startTime = 0L to get all records.
+     */
+    @Query("SELECT * FROM stat_records WHERE stat_id = :statId AND recorded_at >= :startTime ORDER BY recorded_at ASC")
+    suspend fun getRecordsForChartFiltered(statId: Long, startTime: Long): List<StatRecordEntity>
 }
