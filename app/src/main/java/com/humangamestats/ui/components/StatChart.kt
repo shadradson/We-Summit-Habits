@@ -34,9 +34,24 @@ import com.humangamestats.model.StatRecord
 import com.humangamestats.model.StatType
 import com.humangamestats.ui.theme.ChartGrid
 import com.humangamestats.ui.theme.toChartColor
+import java.util.Calendar
 
 private const val MAX_SERIES = 4
 private const val MAX_LABEL_POINTS = 15
+private const val CHECKBOX_MAX_PER_WEEK = 7
+
+/** Returns the Monday 00:00:00 of the week containing [timestamp]. */
+private fun getWeekStart(timestamp: Long): Long {
+    val cal = Calendar.getInstance()
+    cal.timeInMillis = timestamp
+    val daysFromMonday = (cal.get(Calendar.DAY_OF_WEEK) - Calendar.MONDAY + 7) % 7
+    cal.add(Calendar.DAY_OF_YEAR, -daysFromMonday)
+    cal.set(Calendar.HOUR_OF_DAY, 0)
+    cal.set(Calendar.MINUTE, 0)
+    cal.set(Calendar.SECOND, 0)
+    cal.set(Calendar.MILLISECOND, 0)
+    return cal.timeInMillis
+}
 
 private data class ChartSeries(
     val dataPoint: DataPoint,
@@ -65,23 +80,42 @@ fun StatChart(
 
     val allSeries = remember(records, dataPoints) {
         seriesDataPoints.mapIndexed { index, dp ->
-            val rawData = records.mapNotNull { record ->
-                val rawValue = record.getValueForDataPoint(dp.id)
-                    ?: record.values.getOrNull(index)?.value
-                    ?: if (index == 0) @Suppress("DEPRECATION") record.value else null
-
-                val numVal = when (dp.type) {
-                    StatType.NUMBER   -> rawValue?.toDoubleOrNull()
-                    StatType.DURATION -> rawValue?.toLongOrNull()?.toDouble()
-                    StatType.RATING   -> rawValue?.toIntOrNull()?.toDouble()
-                    StatType.CHECKBOX -> rawValue?.let { if (it == "true") 1.0 else 0.0 }
+            val rawData: List<Pair<Long, Double>> = if (dp.type == StatType.CHECKBOX) {
+                // Aggregate "true" entries by calendar week → count per week (0–7)
+                val weekCounts = mutableMapOf<Long, Int>()
+                records.forEach { record ->
+                    val rawValue = record.getValueForDataPoint(dp.id)
+                        ?: record.values.getOrNull(index)?.value
+                        ?: if (index == 0) @Suppress("DEPRECATION") record.value else null
+                    if (rawValue == "true") {
+                        val weekStart = getWeekStart(record.recordedAt)
+                        weekCounts[weekStart] = (weekCounts[weekStart] ?: 0) + 1
+                    }
                 }
-                numVal?.let { record.recordedAt to it }
-            }.sortedBy { it.first }
+                weekCounts.entries
+                    .sortedBy { it.key }
+                    .map { (weekStart, count) ->
+                        weekStart to minOf(count, CHECKBOX_MAX_PER_WEEK).toDouble()
+                    }
+            } else {
+                records.mapNotNull { record ->
+                    val rawValue = record.getValueForDataPoint(dp.id)
+                        ?: record.values.getOrNull(index)?.value
+                        ?: if (index == 0) @Suppress("DEPRECATION") record.value else null
+                    val numVal = when (dp.type) {
+                        StatType.NUMBER   -> rawValue?.toDoubleOrNull()
+                        StatType.DURATION -> rawValue?.toLongOrNull()?.toDouble()
+                        StatType.RATING   -> rawValue?.toIntOrNull()?.toDouble()
+                        StatType.CHECKBOX -> null // handled above
+                    }
+                    numVal?.let { record.recordedAt to it }
+                }.sortedBy { it.first }
+            }
 
             val color = dp.color.toChartColor(index)
-            val minVal = rawData.minOfOrNull { it.second } ?: 0.0
-            val maxVal = rawData.maxOfOrNull { it.second } ?: 1.0
+            // Checkbox series always uses a fixed 0–7 scale
+            val minVal = if (dp.type == StatType.CHECKBOX) 0.0 else rawData.minOfOrNull { it.second } ?: 0.0
+            val maxVal = if (dp.type == StatType.CHECKBOX) CHECKBOX_MAX_PER_WEEK.toDouble() else rawData.maxOfOrNull { it.second } ?: 1.0
 
             ChartSeries(dp, index, color, rawData, minVal, maxVal)
         }.filter { it.points.size >= 2 }
@@ -228,6 +262,6 @@ private fun formatChartLabel(value: Double, dataPoint: DataPoint): String {
             }
         }
         StatType.RATING   -> "${value.toInt()}★"
-        StatType.CHECKBOX -> if (value > 0.5) "✓" else "✗"
+        StatType.CHECKBOX -> "${value.toInt()}/$CHECKBOX_MAX_PER_WEEK"
     }
 }
